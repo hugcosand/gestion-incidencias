@@ -1,6 +1,7 @@
 package com.gestion.incidencias.service;
 
 import com.gestion.incidencias.entity.Incidencia;
+import com.gestion.incidencias.entity.Estado;
 import com.gestion.incidencias.repository.IncidenciaRepository;
 import org.springframework.stereotype.Service;
 
@@ -31,5 +32,18 @@ public class IncidenciaService {
 
     public Incidencia obtenerPorId(Long id) {
         return incidenciaRepository.findById(id).orElse(null);
+    }
+
+    // NUEVOS MÉTODOS PARA FILTROS
+    public List<Incidencia> obtenerPorAlumno(String alumno) {
+        return incidenciaRepository.findByAlumnoNombreContainingIgnoreCase(alumno);
+    }
+
+    public List<Incidencia> obtenerPorFecha(LocalDate fecha) {
+        return incidenciaRepository.findByFechaCreacion(fecha);
+    }
+
+    public List<Incidencia> obtenerPorEstado(Estado estado) {
+        return incidenciaRepository.findByEstado(estado);
     }
 }

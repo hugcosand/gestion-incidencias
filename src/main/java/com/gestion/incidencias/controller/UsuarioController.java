@@ -1,7 +1,12 @@
 package com.gestion.incidencias.controller;
 
 import com.gestion.incidencias.entity.Usuario;
-import com.gestion.incidencias.repository.UsuarioRepository;
+import com.gestion.incidencias.entity.Rol;
+import com.gestion.incidencias.service.UsuarioService;
+import com.gestion.incidencias.util.UsuarioUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,59 +15,71 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@SecurityRequirement(name = "X-Email")
+@Tag(name = "Usuarios", description = "CRUD de usuarios (solo ADMIN)")
 public class UsuarioController {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
+    private final UsuarioUtil usuarioUtil;
 
-    public UsuarioController(UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
+    public UsuarioController(UsuarioService usuarioService, UsuarioUtil usuarioUtil) {
+        this.usuarioService = usuarioService;
+        this.usuarioUtil = usuarioUtil;
     }
 
-    // Obtener todos los usuarios
+    private void checkAdmin() {
+        Usuario usuario = usuarioUtil.getUsuarioFromRequest();
+        if (usuario.getRol() != Rol.ADMIN) {
+            throw new RuntimeException("Acceso denegado: solo administradores");
+        }
+    }
+
     @GetMapping
+    @Operation(summary = "Listar todos los usuarios")
     public List<Usuario> listarTodos() {
-        return usuarioRepository.findAll();
+        checkAdmin();
+        return usuarioService.obtenerTodos(); // Necesitas crear este método en UsuarioService
     }
 
-    // Obtener un usuario por ID
     @GetMapping("/{id}")
+    @Operation(summary = "Obtener usuario por ID")
     public ResponseEntity<Usuario> obtenerPorId(@PathVariable Long id) {
-        Usuario usuario = usuarioRepository.findById(id).orElse(null);
+        checkAdmin();
+        Usuario usuario = usuarioService.obtenerPorId(id); // Necesitas crear este método
         if (usuario == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(usuario);
     }
 
-    // Crear un nuevo usuario
     @PostMapping
+    @Operation(summary = "Crear nuevo usuario")
     public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
-        // Por defecto, activo = true si no se envía
-        if (usuario.isActivo() == false) {
-            usuario.setActivo(true);
-        }
-        Usuario nuevo = usuarioRepository.save(usuario);
+        checkAdmin();
+        Usuario nuevo = usuarioService.guardar(usuario); // Necesitas crear este método
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
 
-    // Actualizar un usuario existente
     @PutMapping("/{id}")
+    @Operation(summary = "Actualizar usuario")
     public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @RequestBody Usuario usuario) {
-        if (!usuarioRepository.existsById(id)) {
+        checkAdmin();
+        if (usuarioService.obtenerPorId(id) == null) {
             return ResponseEntity.notFound().build();
         }
         usuario.setId(id);
-        Usuario actualizado = usuarioRepository.save(usuario);
+        Usuario actualizado = usuarioService.guardar(usuario);
         return ResponseEntity.ok(actualizado);
     }
 
-    // Eliminar un usuario
     @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar usuario")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        if (!usuarioRepository.existsById(id)) {
+        checkAdmin();
+        if (usuarioService.obtenerPorId(id) == null) {
             return ResponseEntity.notFound().build();
         }
-        usuarioRepository.deleteById(id);
+        usuarioService.eliminar(id); // Necesitas crear este método
         return ResponseEntity.noContent().build();
     }
 }
