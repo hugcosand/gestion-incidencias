@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -37,7 +38,7 @@ public class IncidenciaController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtener incidencia por ID")
+    @Operation(summary = "Obtener incidencia por ID", description = "Acceso para ADMIN y PROFESOR")
     public ResponseEntity<Incidencia> obtenerPorId(@PathVariable Long id) {
         Incidencia incidencia = incidenciaService.obtenerPorId(id);
         if (incidencia == null) {
@@ -47,12 +48,14 @@ public class IncidenciaController {
     }
 
     @PostMapping
-    @Operation(summary = "Crear nueva incidencia", description = "Solo ADMIN")
+    @Operation(summary = "Crear nueva incidencia", description = "Acceso para ADMIN y PROFESOR")
     public ResponseEntity<?> crear(@Valid @RequestBody IncidenciaDTO incidenciaDTO) {
         Usuario usuario = usuarioUtil.getUsuarioFromRequest();
 
-        if (usuario.getRol() != Rol.ADMIN) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Solo ADMIN puede crear incidencias");
+        // ✅ AHORA: ADMIN y PROFESOR pueden crear incidencias
+        if (usuario.getRol() != Rol.ADMIN && usuario.getRol() != Rol.PROFESOR) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("No tienes permisos para crear incidencias");
         }
 
         // Convertir DTO a Entidad
@@ -65,7 +68,7 @@ public class IncidenciaController {
         incidencia.setSolucion(incidenciaDTO.getSolucion());
         incidencia.setSensacion(incidenciaDTO.getSensacion());
 
-        // Asignar profesor desde el header (¡IMPORTANTE!)
+        // Asignar profesor desde el header (quien crea la incidencia)
         incidencia.setProfesor(usuario);
 
         Incidencia nueva = incidenciaService.guardar(incidencia);
@@ -73,17 +76,26 @@ public class IncidenciaController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Actualizar incidencia", description = "Solo ADMIN")
+    @Operation(summary = "Actualizar incidencia", description = "Acceso para ADMIN y PROFESOR (profesores solo pueden editar las suyas)")
     public ResponseEntity<?> actualizar(@PathVariable Long id, @Valid @RequestBody IncidenciaDTO incidenciaDTO) {
         Usuario usuario = usuarioUtil.getUsuarioFromRequest();
 
-        if (usuario.getRol() != Rol.ADMIN) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Solo ADMIN puede editar incidencias");
+        // Verificar permisos básicos
+        if (usuario.getRol() != Rol.ADMIN && usuario.getRol() != Rol.PROFESOR) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("No tienes permisos para editar incidencias");
         }
 
         Incidencia incidenciaExistente = incidenciaService.obtenerPorId(id);
         if (incidenciaExistente == null) {
             return ResponseEntity.notFound().build();
+        }
+
+        // ✅ Si es PROFESOR, verificar que sea el creador de la incidencia
+        if (usuario.getRol() == Rol.PROFESOR &&
+                !incidenciaExistente.getProfesor().getId().equals(usuario.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Solo puedes editar tus propias incidencias");
         }
 
         // Actualizar campos desde DTO
@@ -95,41 +107,51 @@ public class IncidenciaController {
         incidenciaExistente.setSolucion(incidenciaDTO.getSolucion());
         incidenciaExistente.setSensacion(incidenciaDTO.getSensacion());
 
-        // No cambiamos el profesor en actualización
+        // No cambiamos el profesor en actualización (se mantiene el creador original)
 
         Incidencia actualizada = incidenciaService.guardar(incidenciaExistente);
         return ResponseEntity.ok(actualizada);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar incidencia", description = "Solo ADMIN")
+    @Operation(summary = "Eliminar incidencia", description = "Solo ADMIN (o profesor de la incidencia si se permite)")
     public ResponseEntity<?> eliminar(@PathVariable Long id) {
         Usuario usuario = usuarioUtil.getUsuarioFromRequest();
 
-        if (usuario.getRol() != Rol.ADMIN) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Solo ADMIN puede eliminar incidencias");
-        }
-
-        if (incidenciaService.obtenerPorId(id) == null) {
+        Incidencia incidencia = incidenciaService.obtenerPorId(id);
+        if (incidencia == null) {
             return ResponseEntity.notFound().build();
         }
 
-        incidenciaService.eliminar(id);
-        return ResponseEntity.noContent().build();
+        // ✅ ADMIN puede eliminar cualquier incidencia
+        if (usuario.getRol() == Rol.ADMIN) {
+            incidenciaService.eliminar(id);
+            return ResponseEntity.noContent().build();
+        }
+
+        // ✅ PROFESOR solo puede eliminar sus propias incidencias (opcional)
+        if (usuario.getRol() == Rol.PROFESOR &&
+                incidencia.getProfesor().getId().equals(usuario.getId())) {
+            incidenciaService.eliminar(id);
+            return ResponseEntity.noContent().build();
+        }
+
+        // Si no cumple ninguna condición, denegar
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body("No tienes permisos para eliminar esta incidencia");
     }
 
-    // NUEVO: Endpoint para filtrar (Caso de uso 4)
     @GetMapping("/filtrar")
     @Operation(summary = "Filtrar incidencias por alumno, fecha o estado")
     public List<Incidencia> filtrar(
             @RequestParam(required = false) String alumno,
-            @RequestParam(required = false) String fecha, // Formato: YYYY-MM-DD
+            @RequestParam(required = false) String fecha,
             @RequestParam(required = false) String estado) {
 
         if (alumno != null && !alumno.isEmpty()) {
             return incidenciaService.obtenerPorAlumno(alumno);
         } else if (fecha != null && !fecha.isEmpty()) {
-            return incidenciaService.obtenerPorFecha(java.time.LocalDate.parse(fecha));
+            return incidenciaService.obtenerPorFecha(LocalDate.parse(fecha));
         } else if (estado != null && !estado.isEmpty()) {
             return incidenciaService.obtenerPorEstado(com.gestion.incidencias.entity.Estado.valueOf(estado));
         } else {
