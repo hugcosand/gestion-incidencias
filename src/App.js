@@ -9,6 +9,7 @@ import UsuarioForm from './components/UsuarioForm';
 import authService from './services/auth';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import Registro from './components/Registro';  // ✅ IMPORTAR REGISTRO
 import './App.css';
 
 // Componente para proteger rutas (solo autenticados)
@@ -33,10 +34,10 @@ function App() {
     <HashRouter>
       <div className="App">
         <Routes>
+          {/* Rutas públicas */}
+          <Route path="/registro" element={<Registro />} />              {/* ✅ NUEVA */}
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          
-          {/* Ruta pública */}
           <Route path="/" element={<Login />} />
           
           {/* Todas las rutas de incidencias con PrivateRoute */}
@@ -49,9 +50,8 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Profesores pueden crear incidencias */}
           <Route path="/incidencias/nueva" element={
-            <PrivateRoute>  {/* ← CAMBIADO DE AdminRoute A PrivateRoute */}
+            <PrivateRoute>
               <>
                 <Navbar />
                 <IncidenciaForm />
@@ -59,9 +59,8 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Profesores pueden editar incidencias */}
           <Route path="/incidencias/editar/:id" element={
-            <PrivateRoute>  {/* ← CAMBIADO DE AdminRoute A PrivateRoute */}
+            <PrivateRoute>
               <>
                 <Navbar />
                 <IncidenciaForm />
@@ -69,7 +68,7 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Gestión de usuarios (se queda igual) */}
+          {/* Gestión de usuarios (solo ADMIN) */}
           <Route path="/usuarios" element={
             <AdminRoute>
               <>
