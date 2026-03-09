@@ -18,7 +18,7 @@ const PrivateRoute = ({ children }) => {
 };
 
 // Componente para proteger rutas de ADMIN
-const  AdminRoute = ({ children }) => {
+const AdminRoute = ({ children }) => {
   const isAuthenticated = authService.isAuthenticated();
   const isAdmin = authService.isAdmin();
   
@@ -39,7 +39,7 @@ function App() {
           {/* Ruta pública */}
           <Route path="/" element={<Login />} />
           
-          {/* Rutas para incidencias (todos los usuarios autenticados) */}
+          {/* ✅ CORREGIDO: Todas las rutas de incidencias con PrivateRoute */}
           <Route path="/incidencias" element={
             <PrivateRoute>
               <>
@@ -49,26 +49,27 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* Rutas para incidencias (solo ADMIN) */}
+          {/* ✅ AHORA: Profesores pueden crear incidencias */}
           <Route path="/incidencias/nueva" element={
-            <AdminRoute>
+            <PrivateRoute>  {/* ← CAMBIADO DE AdminRoute A PrivateRoute */}
               <>
                 <Navbar />
                 <IncidenciaForm />
               </>
-            </AdminRoute>
+            </PrivateRoute>
           } />
           
+          {/* ✅ AHORA: Profesores pueden editar incidencias */}
           <Route path="/incidencias/editar/:id" element={
-            <AdminRoute>
+            <PrivateRoute>  {/* ← CAMBIADO DE AdminRoute A PrivateRoute */}
               <>
                 <Navbar />
                 <IncidenciaForm />
               </>
-            </AdminRoute>
+            </PrivateRoute>
           } />
           
-          {/* Rutas para usuarios (solo ADMIN) */}
+          {/* 🟦 SOLO ADMIN: Gestión de usuarios (se queda igual) */}
           <Route path="/usuarios" element={
             <AdminRoute>
               <>

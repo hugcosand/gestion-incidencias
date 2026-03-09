@@ -6,6 +6,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
   const isAdmin = authService.isAdmin();
+  // ✅ Nuevo: cualquier usuario autenticado (admin o profesor)
+  const isAuthenticated = authService.isAuthenticated();
 
   const handleLogout = () => {
     authService.logout();
@@ -36,19 +38,22 @@ const Navbar = () => {
               </Link>
             </li>
             
+            {/* ✅ CAMBIO: Nueva incidencia visible para TODOS los autenticados */}
+            {isAuthenticated && (
+              <li className="nav-item">
+                <Link className="nav-link" to="/incidencias/nueva">
+                  Nueva Incidencia
+                </Link>
+              </li>
+            )}
+            
+            {/* ✅ SOLO ADMIN: Gestión de usuarios */}
             {isAdmin && (
-              <>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/incidencias/nueva">
-                    Nueva Incidencia
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/usuarios">
-                    Usuarios
-                  </Link>
-                </li>
-              </>
+              <li className="nav-item">
+                <Link className="nav-link" to="/usuarios">
+                  Usuarios
+                </Link>
+              </li>
             )}
           </ul>
 
