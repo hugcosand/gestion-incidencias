@@ -1,5 +1,6 @@
 package com.gestion.incidencias.controller;
 
+import com.gestion.incidencias.dto.RegistroDTO;
 import com.gestion.incidencias.entity.Usuario;
 import com.gestion.incidencias.entity.Rol;
 import com.gestion.incidencias.service.UsuarioService;
@@ -7,6 +8,7 @@ import com.gestion.incidencias.util.UsuarioUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -81,5 +83,39 @@ public class UsuarioController {
         }
         usuarioService.eliminar(id); // Necesitas crear este método
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/registro")
+    @Operation(summary = "Registro público de nuevos usuarios", description = "Cualquier persona puede registrarse")
+    public ResponseEntity<?> registrar(@Valid @RequestBody RegistroDTO registroDTO) {
+        try {
+            // Verificar si el email ya existe
+            Usuario existente = usuarioService.obtenerPorEmail(registroDTO.getEmail());
+            if (existente != null) {
+                return ResponseEntity
+                        .status(HttpStatus.BAD_REQUEST)
+                        .body("El email ya está registrado");
+            }
+
+            // Crear nuevo usuario con rol PROFESOR por defecto
+            Usuario nuevoUsuario = new Usuario();
+            nuevoUsuario.setNombre(registroDTO.getNombre());
+            nuevoUsuario.setEmail(registroDTO.getEmail());
+            nuevoUsuario.setPassword(registroDTO.getPassword()); // Se encriptará en guardar()
+            nuevoUsuario.setRol(Rol.PROFESOR); // Rol por defecto
+            nuevoUsuario.setActivo(true); // Activo por defecto
+
+            Usuario guardado = usuarioService.guardar(nuevoUsuario);
+
+            // No devolver la contraseña en la respuesta
+            guardado.setPassword(null);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(guardado);
+
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al registrar usuario: " + e.getMessage());
+        }
     }
 }
