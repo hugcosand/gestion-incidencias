@@ -1,29 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import api from '../services/api';
 import authService from '../services/auth';
+import IncidenciaFiltros from './IncidenciaFiltros';
 
 const IncidenciaList = () => {
   const [incidencias, setIncidencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
   
   const user = authService.getCurrentUser();
   const isAdmin = authService.isAdmin();
   const isProfesor = user?.rol === 'PROFESOR';
 
+  // Cargar incidencias al montar el componente
   useEffect(() => {
     cargarIncidencias();
   }, []);
 
-  const cargarIncidencias = async () => {
+  const cargarIncidencias = async (filtros = {}) => {
     try {
-      const response = await api.get('/incidencias');
+      setLoading(true);
+      
+      // Construir query params solo con los filtros que tienen valor
+      const params = new URLSearchParams();
+      
+      if (filtros.alumno && filtros.alumno.trim() !== '') {
+        params.append('alumno', filtros.alumno.trim());
+      }
+      if (filtros.fecha && filtros.fecha !== '') {
+        params.append('fecha', filtros.fecha);
+      }
+      if (filtros.tipo && filtros.tipo !== '') {
+        params.append('tipo', filtros.tipo);
+      }
+      if (filtros.estado && filtros.estado !== '') {
+        params.append('estado', filtros.estado);
+      }
+      if (filtros.sensacion && filtros.sensacion !== '') {
+        params.append('sensacion', filtros.sensacion);
+      }
+      
+      const queryString = params.toString();
+      const url = `/incidencias/filtrar${queryString ? '?' + queryString : ''}`;
+      
+      console.log('Cargando incidencias con URL:', url); // Para depurar
+      
+      const response = await api.get(url);
       setIncidencias(response.data);
-      setLoading(false);
+      setError('');
     } catch (err) {
+      console.error('Error al cargar incidencias:', err);
       setError('Error al cargar las incidencias');
+    } finally {
       setLoading(false);
     }
   };
@@ -32,6 +61,7 @@ const IncidenciaList = () => {
     if (window.confirm('¿Estás seguro de eliminar esta incidencia?')) {
       try {
         await api.delete(`/incidencias/${id}`);
+        // Recargar incidencias después de eliminar
         cargarIncidencias();
       } catch (err) {
         alert('Error al eliminar la incidencia');
@@ -39,40 +69,56 @@ const IncidenciaList = () => {
     }
   };
 
-  // ✅ Verificar si el usuario puede editar/eliminar una incidencia específica
   const puedeEditar = (incidencia) => {
-    if (isAdmin) return true; // ADMIN puede todo
-    if (isProfesor && incidencia.profesor?.id === user?.id) return true; // Profesor dueño
+    if (isAdmin) return true;
+    if (isProfesor && incidencia.profesor?.id === user?.id) return true;
     return false;
   };
 
-  if (loading) return <div className="text-center mt-5">Cargando...</div>;
-  if (error) return <div className="alert alert-danger">{error}</div>;
+  if (loading && incidencias.length === 0) {
+    return (
+      <div className="container mt-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Listado de Incidencias</h2>
-        
-        {/* ✅ Botón visible para TODOS */}
         <Link to="/incidencias/nueva" className="btn btn-primary">
-          + Nueva Incidencia
+          <i className="bi bi-plus-circle me-2"></i>
+          Nueva Incidencia
         </Link>
       </div>
 
+      {/* Componente de filtros */}
+      <IncidenciaFiltros onFiltrar={cargarIncidencias} />
+
+      {error && (
+        <div className="alert alert-danger" role="alert">
+          {error}
+        </div>
+      )}
+
       {incidencias.length === 0 ? (
-        <div className="alert alert-info">No hay incidencias registradas</div>
+        <div className="alert alert-info">
+          No hay incidencias que coincidan con los filtros
+        </div>
       ) : (
         <div className="table-responsive">
           <table className="table table-striped table-hover">
             <thead className="table-dark">
               <tr>
-                <th>ID</th>
                 <th>Alumno</th>
                 <th>Descripción</th>
                 <th>Fecha</th>
                 <th>Tipo</th>
                 <th>Estado</th>
+                <th>Sensación</th>
                 <th>Profesor</th>
                 <th>Acciones</th>
               </tr>
@@ -80,7 +126,6 @@ const IncidenciaList = () => {
             <tbody>
               {incidencias.map((inc) => (
                 <tr key={inc.id}>
-                  <td>{inc.id}</td>
                   <td>{inc.alumnoNombre}</td>
                   <td>{inc.descripcion.substring(0, 50)}...</td>
                   <td>{new Date(inc.fechaHoraIncidente).toLocaleDateString()}</td>
@@ -94,9 +139,9 @@ const IncidenciaList = () => {
                       {inc.estado}
                     </span>
                   </td>
+                  <td>{inc.sensacion || 'N/A'}</td>
                   <td>{inc.profesor?.nombre || 'N/A'}</td>
                   <td>
-                    {/* ✅ Botones condicionales según permisos */}
                     {puedeEditar(inc) && (
                       <>
                         <Link 
@@ -115,11 +160,6 @@ const IncidenciaList = () => {
                         </button>
                       </>
                     )}
-                    
-                    {/* Si no puede editar, mostrar solo ver (opcional) */}
-                    {!puedeEditar(inc) && (
-                      <span className="text-muted">Solo lectura</span>
-                    )}
                   </td>
                 </tr>
               ))}
@@ -131,11 +171,11 @@ const IncidenciaList = () => {
   );
 };
 
-// Funciones auxiliares para badges (igual que antes)
+// Funciones auxiliares para badges
 const getTipoBadge = (tipo) => {
   switch(tipo) {
     case 'LEVE': return 'bg-success';
-    case 'GRAVE': return 'bg-warning';
+    case 'GRAVE': return 'bg-warning text-dark';
     case 'MUY_GRAVE': return 'bg-danger';
     default: return 'bg-secondary';
   }
@@ -144,7 +184,7 @@ const getTipoBadge = (tipo) => {
 const getEstadoBadge = (estado) => {
   switch(estado) {
     case 'PENDIENTE': return 'bg-secondary';
-    case 'EN_REVISION': return 'bg-info';
+    case 'EN_REVISION': return 'bg-info text-dark';
     case 'RESUELTA': return 'bg-success';
     default: return 'bg-secondary';
   }
