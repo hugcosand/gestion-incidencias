@@ -1,0 +1,72 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "electron/main.js",
+  "homepage": "./",
+  "description": "Gestión de incidencias IES SERPIS - App escritorio",
+  "scripts": {
+    "start": "react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject",
+  "dev:electron": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development electron .\"",
+  "build:electron": "npm run build && electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.8.4",
+    "bootstrap": "^5.3.3",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.4.1",
+    "react-scripts": "^5.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.8.0",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^9.0.4"
+  },
+  "build": {
+  "appId": "com.tunombre.gestionincidencias",
+  "productName": "Gestión de Incidencias",
+  "files": [
+    "build/**/*",
+    "electron/**/*",
+    "node_modules/**/*"
+  ],
+  "directories": {
+    "output": "dist"
+  },
+  "extraMetadata": {
+    "main": "electron/main.js"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "public/favicon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Gestión de Incidencias"
+  }
+}
+}
