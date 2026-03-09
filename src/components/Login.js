@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -67,6 +68,12 @@ const Login = () => {
                     required
                     placeholder="••••"
                   />
+                </div>
+
+                <div className="text-end mb-3">
+                  <Link to="/forgot-password" className="text-decoration-none">
+                    ¿Olvidaste tu contraseña?
+                  </Link>
                 </div>
 
                 <button 

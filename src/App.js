@@ -7,6 +7,8 @@ import IncidenciaForm from './components/IncidenciaForm';
 import UsuarioList from './components/UsuarioList';
 import UsuarioForm from './components/UsuarioForm';
 import authService from './services/auth';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import './App.css';
 
 // Componente para proteger rutas (solo autenticados)
@@ -31,6 +33,9 @@ function App() {
     <HashRouter>
       <div className="App">
         <Routes>
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          
           {/* Ruta pública */}
           <Route path="/" element={<Login />} />
           
