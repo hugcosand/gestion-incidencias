@@ -39,7 +39,7 @@ function App() {
           {/* Ruta pública */}
           <Route path="/" element={<Login />} />
           
-          {/* ✅ CORREGIDO: Todas las rutas de incidencias con PrivateRoute */}
+          {/* Todas las rutas de incidencias con PrivateRoute */}
           <Route path="/incidencias" element={
             <PrivateRoute>
               <>
@@ -49,7 +49,7 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* ✅ AHORA: Profesores pueden crear incidencias */}
+          {/* Profesores pueden crear incidencias */}
           <Route path="/incidencias/nueva" element={
             <PrivateRoute>  {/* ← CAMBIADO DE AdminRoute A PrivateRoute */}
               <>
@@ -59,7 +59,7 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* ✅ AHORA: Profesores pueden editar incidencias */}
+          {/* Profesores pueden editar incidencias */}
           <Route path="/incidencias/editar/:id" element={
             <PrivateRoute>  {/* ← CAMBIADO DE AdminRoute A PrivateRoute */}
               <>
@@ -69,7 +69,7 @@ function App() {
             </PrivateRoute>
           } />
           
-          {/* 🟦 SOLO ADMIN: Gestión de usuarios (se queda igual) */}
+          {/* Gestión de usuarios (se queda igual) */}
           <Route path="/usuarios" element={
             <AdminRoute>
               <>
