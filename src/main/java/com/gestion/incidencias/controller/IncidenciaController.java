@@ -142,20 +142,14 @@ public class IncidenciaController {
     }
 
     @GetMapping("/filtrar")
-    @Operation(summary = "Filtrar incidencias por alumno, fecha o estado")
+    @Operation(summary = "Filtrar incidencias por múltiples criterios")
     public List<Incidencia> filtrar(
             @RequestParam(required = false) String alumno,
             @RequestParam(required = false) String fecha,
-            @RequestParam(required = false) String estado) {
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String estado,
+            @RequestParam(required = false) String sensacion) {
 
-        if (alumno != null && !alumno.isEmpty()) {
-            return incidenciaService.obtenerPorAlumno(alumno);
-        } else if (fecha != null && !fecha.isEmpty()) {
-            return incidenciaService.obtenerPorFecha(LocalDate.parse(fecha));
-        } else if (estado != null && !estado.isEmpty()) {
-            return incidenciaService.obtenerPorEstado(com.gestion.incidencias.entity.Estado.valueOf(estado));
-        } else {
-            return incidenciaService.obtenerTodas();
-        }
+        return incidenciaService.filtrar(alumno, fecha, tipo, estado, sensacion);
     }
 }

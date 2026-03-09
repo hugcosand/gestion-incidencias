@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class IncidenciaService {
@@ -34,16 +35,50 @@ public class IncidenciaService {
         return incidenciaRepository.findById(id).orElse(null);
     }
 
-    // NUEVOS MÉTODOS PARA FILTROS
-    public List<Incidencia> obtenerPorAlumno(String alumno) {
-        return incidenciaRepository.findByAlumnoNombreContainingIgnoreCase(alumno);
-    }
+    public List<Incidencia> filtrar(String alumno, String fecha, String tipo,
+                                    String estado, String sensacion) {
 
-    public List<Incidencia> obtenerPorFecha(LocalDate fecha) {
-        return incidenciaRepository.findByFechaCreacion(fecha);
-    }
+        // Empezamos con todas las incidencias
+        List<Incidencia> resultados = obtenerTodas();
 
-    public List<Incidencia> obtenerPorEstado(Estado estado) {
-        return incidenciaRepository.findByEstado(estado);
+        // Filtrar por alumno (búsqueda parcial, case insensitive)
+        if (alumno != null && !alumno.trim().isEmpty()) {
+            resultados = resultados.stream()
+                    .filter(i -> i.getAlumnoNombre().toLowerCase()
+                            .contains(alumno.toLowerCase().trim()))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por fecha exacta
+        if (fecha != null && !fecha.trim().isEmpty()) {
+            LocalDate fechaFiltro = LocalDate.parse(fecha);
+            resultados = resultados.stream()
+                    .filter(i -> i.getFechaHoraIncidente().toLocalDate().equals(fechaFiltro))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por tipo
+        if (tipo != null && !tipo.trim().isEmpty()) {
+            resultados = resultados.stream()
+                    .filter(i -> i.getTipoIncidencia().name().equals(tipo))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por estado
+        if (estado != null && !estado.trim().isEmpty()) {
+            resultados = resultados.stream()
+                    .filter(i -> i.getEstado().name().equals(estado))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por sensación
+        if (sensacion != null && !sensacion.trim().isEmpty()) {
+            resultados = resultados.stream()
+                    .filter(i -> i.getSensacion() != null &&
+                            i.getSensacion().name().equals(sensacion))
+                    .collect(Collectors.toList());
+        }
+
+        return resultados;
     }
 }
