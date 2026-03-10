@@ -9,7 +9,11 @@ import UsuarioForm from './components/UsuarioForm';
 import authService from './services/auth';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
-import Registro from './components/Registro';  // ✅ IMPORTAR REGISTRO
+import Registro from './components/Registro';
+import SolucionList from './components/SolucionList';
+import SolucionForm from './components/SolucionForm';
+import SensacionList from './components/SensacionList';
+import SensacionForm from './components/SensacionForm';
 import './App.css';
 
 // Componente para proteger rutas (solo autenticados)
@@ -95,9 +99,63 @@ function App() {
               </>
             </AdminRoute>
           } />
-        </Routes>
-      </div>
-    </HashRouter>
+
+          <Route path="/soluciones" element={
+            <AdminRoute>
+              <>
+                <Navbar />
+                <SolucionList />
+              </>
+            </AdminRoute>
+          } />
+
+          <Route path="/soluciones/nueva" element={
+            <AdminRoute>
+              <>
+                <Navbar />
+                <SolucionForm />
+              </>
+            </AdminRoute>
+          } />
+
+          <Route path="/soluciones/editar/:id" element={
+            <AdminRoute>
+              <>
+                <Navbar />
+                <SolucionForm />
+              </>
+            </AdminRoute>
+          } />
+
+          <Route path="/sensaciones" element={
+            <AdminRoute>
+              <>
+                <Navbar />
+                <SensacionList />
+              </>
+            </AdminRoute>
+          } />
+
+          <Route path="/sensaciones/nueva" element={
+            <AdminRoute>
+              <>
+                <Navbar />
+                <SensacionForm />
+        </>
+      </AdminRoute>
+    } />
+
+    <Route path="/sensaciones/editar/:id" element={
+      <AdminRoute>
+        <>
+          <Navbar />
+          <SensacionForm />
+        </>
+      </AdminRoute>
+    } />
+            </Routes>
+          </div>
+        </HashRouter>
   );
 }
 

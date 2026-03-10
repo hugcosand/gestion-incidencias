@@ -13,7 +13,6 @@ const IncidenciaList = () => {
   const isAdmin = authService.isAdmin();
   const isProfesor = user?.rol === 'PROFESOR';
 
-  // Cargar incidencias al montar el componente
   useEffect(() => {
     cargarIncidencias();
   }, []);
@@ -22,46 +21,30 @@ const IncidenciaList = () => {
     try {
       setLoading(true);
       
-      // Construir query params solo con los filtros que tienen valor
       const params = new URLSearchParams();
-      
-      if (filtros.alumno && filtros.alumno.trim() !== '') {
-        params.append('alumno', filtros.alumno.trim());
-      }
-      if (filtros.fecha && filtros.fecha !== '') {
-        params.append('fecha', filtros.fecha);
-      }
-      if (filtros.tipo && filtros.tipo !== '') {
-        params.append('tipo', filtros.tipo);
-      }
-      if (filtros.estado && filtros.estado !== '') {
-        params.append('estado', filtros.estado);
-      }
-      if (filtros.sensacion && filtros.sensacion !== '') {
-        params.append('sensacion', filtros.sensacion);
-      }
+      if (filtros.alumno?.trim()) params.append('alumno', filtros.alumno.trim());
+      if (filtros.fecha) params.append('fecha', filtros.fecha);
+      if (filtros.tipo) params.append('tipo', filtros.tipo);
+      if (filtros.estado) params.append('estado', filtros.estado);
+      if (filtros.sensacion) params.append('sensacion', filtros.sensacion);
       
       const queryString = params.toString();
       const url = `/incidencias/filtrar${queryString ? '?' + queryString : ''}`;
-      
-      console.log('Cargando incidencias con URL:', url); // Para depurar
       
       const response = await api.get(url);
       setIncidencias(response.data);
       setError('');
     } catch (err) {
-      console.error('Error al cargar incidencias:', err);
       setError('Error al cargar las incidencias');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar esta incidencia?')) {
+  const handleDelete = async (id, alumno) => {
+    if (window.confirm(`¿Está seguro de eliminar la incidencia de ${alumno}?`)) {
       try {
         await api.delete(`/incidencias/${id}`);
-        // Recargar incidencias después de eliminar
         cargarIncidencias();
       } catch (err) {
         alert('Error al eliminar la incidencia');
@@ -75,12 +58,23 @@ const IncidenciaList = () => {
     return false;
   };
 
+  const formatFecha = (fecha) => {
+    return new Date(fecha).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (loading && incidencias.length === 0) {
     return (
       <div className="container mt-5 text-center">
-        <div className="spinner-border text-primary" role="status">
+        <div className="spinner-border" role="status">
           <span className="visually-hidden">Cargando...</span>
         </div>
+        <p className="mt-2 text-muted">Cargando incidencias...</p>
       </div>
     );
   }
@@ -88,36 +82,41 @@ const IncidenciaList = () => {
   return (
     <div className="container mt-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Listado de Incidencias</h2>
+        <h2 className="page-title">
+          <i className="bi bi-journal-text me-2"></i>
+          Gestión de Incidencias
+        </h2>
         <Link to="/incidencias/nueva" className="btn btn-primary">
           <i className="bi bi-plus-circle me-2"></i>
           Nueva Incidencia
         </Link>
       </div>
 
-      {/* Componente de filtros */}
       <IncidenciaFiltros onFiltrar={cargarIncidencias} />
 
       {error && (
         <div className="alert alert-danger" role="alert">
+          <i className="bi bi-exclamation-triangle me-2"></i>
           {error}
         </div>
       )}
 
       {incidencias.length === 0 ? (
         <div className="alert alert-info">
+          <i className="bi bi-info-circle me-2"></i>
           No hay incidencias que coincidan con los filtros
         </div>
       ) : (
         <div className="table-responsive">
-          <table className="table table-striped table-hover">
-            <thead className="table-dark">
+          <table className="table table-hover">
+            <thead>
               <tr>
                 <th>Alumno</th>
                 <th>Descripción</th>
-                <th>Fecha</th>
+                <th>Fecha/Hora</th>
                 <th>Tipo</th>
                 <th>Estado</th>
+                <th>Solución</th>
                 <th>Sensación</th>
                 <th>Profesor</th>
                 <th>Acciones</th>
@@ -126,9 +125,11 @@ const IncidenciaList = () => {
             <tbody>
               {incidencias.map((inc) => (
                 <tr key={inc.id}>
-                  <td>{inc.alumnoNombre}</td>
-                  <td>{inc.descripcion.substring(0, 50)}...</td>
-                  <td>{new Date(inc.fechaHoraIncidente).toLocaleDateString()}</td>
+                  <td><strong>{inc.alumnoNombre}</strong></td>
+                  <td>{inc.descripcion.length > 50 
+                    ? inc.descripcion.substring(0, 50) + '...' 
+                    : inc.descripcion}</td>
+                  <td>{formatFecha(inc.fechaHoraIncidente)}</td>
                   <td>
                     <span className={`badge ${getTipoBadge(inc.tipoIncidencia)}`}>
                       {inc.tipoIncidencia}
@@ -139,32 +140,40 @@ const IncidenciaList = () => {
                       {inc.estado}
                     </span>
                   </td>
-                  <td>{inc.sensacion || 'N/A'}</td>
+                  <td>{inc.solucion?.nombre || <span className="text-muted">-</span>}</td>
+                  <td>{inc.sensacion?.nombre || <span className="text-muted">-</span>}</td>
                   <td>{inc.profesor?.nombre || 'N/A'}</td>
                   <td>
                     {puedeEditar(inc) && (
-                      <>
+                      <div className="btn-group" role="group">
                         <Link 
                           to={`/incidencias/editar/${inc.id}`} 
-                          className="btn btn-sm btn-warning me-2"
-                          title="Editar"
+                          className="btn btn-action btn-action-edit"
+                          title="Editar incidencia"
                         >
-                          ✏️
+                          <i className="bi bi-pencil me-1"></i>
+                          Editar
                         </Link>
                         <button 
-                          onClick={() => handleDelete(inc.id)}
-                          className="btn btn-sm btn-danger"
-                          title="Eliminar"
+                          onClick={() => handleDelete(inc.id, inc.alumnoNombre)}
+                          className="btn btn-action btn-action-delete"
+                          title="Eliminar incidencia"
                         >
-                          🗑️
+                          <i className="bi bi-trash me-1"></i>
+                          Eliminar
                         </button>
-                      </>
+                      </div>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          
+          <div className="mt-3 text-muted small">
+            <i className="bi bi-info-circle me-1"></i>
+            Total: {incidencias.length} incidencias
+          </div>
         </div>
       )}
     </div>
@@ -174,19 +183,19 @@ const IncidenciaList = () => {
 // Funciones auxiliares para badges
 const getTipoBadge = (tipo) => {
   switch(tipo) {
-    case 'LEVE': return 'bg-success';
-    case 'GRAVE': return 'bg-warning text-dark';
-    case 'MUY_GRAVE': return 'bg-danger';
-    default: return 'bg-secondary';
+    case 'LEVE': return 'badge-success';
+    case 'GRAVE': return 'badge-warning';
+    case 'MUY_GRAVE': return 'badge-danger';
+    default: return 'badge-secondary';
   }
 };
 
 const getEstadoBadge = (estado) => {
   switch(estado) {
-    case 'PENDIENTE': return 'bg-secondary';
-    case 'EN_REVISION': return 'bg-info text-dark';
-    case 'RESUELTA': return 'bg-success';
-    default: return 'bg-secondary';
+    case 'PENDIENTE': return 'badge-secondary';
+    case 'EN_REVISION': return 'badge-info';
+    case 'RESUELTA': return 'badge-success';
+    default: return 'badge-secondary';
   }
 };
 

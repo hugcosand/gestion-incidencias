@@ -3,118 +3,106 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../services/api';
 
 const IncidenciaForm = () => {
-  const navigate = useNavigate();
-  const { id } = useParams(); // Si hay id, es edición
-  const isEditing = !!id;
-
   const [formData, setFormData] = useState({
     alumnoNombre: '',
     descripcion: '',
     fechaHoraIncidente: '',
     tipoIncidencia: 'LEVE',
     estado: 'PENDIENTE',
-    solucion: 'SIN_DEFINIR',
-    sensacion: 'INDIFERENTE'
+    solucionId: '',
+    sensacionId: ''
   });
-
+  
+  const [soluciones, setSoluciones] = useState([]);
+  const [sensaciones, setSensaciones] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingOptions, setLoadingOptions] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditing = !!id;
 
-  // Enums del backend
-  const tiposIncidencia = ['LEVE', 'GRAVE', 'MUY_GRAVE'];
-  const estados = ['PENDIENTE', 'EN_REVISION', 'RESUELTA'];
-  const soluciones = ['ADVERTENCIA', 'LLAMADA_PADRES', 'EXPULSION', 'SIN_DEFINIR'];
-  const sensaciones = ['ARREPENTIDO', 'INDIFERENTE', 'DESAFIANTE', 'REINCIDENTE'];
+  // Cargar opciones de soluciones y sensaciones
+  useEffect(() => {
+    const cargarOpciones = async () => {
+      try {
+        const [solRes, sensRes] = await Promise.all([
+          api.get('/soluciones/activas'),
+          api.get('/sensaciones/activas')
+        ]);
+        setSoluciones(solRes.data);
+        setSensaciones(sensRes.data);
+      } catch (err) {
+        console.error('Error cargando opciones:', err);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+    cargarOpciones();
+  }, []);
 
-  // Si es edición, cargar los datos de la incidencia
+  // Si es edición, cargar la incidencia
   useEffect(() => {
     if (isEditing) {
       cargarIncidencia();
-    } else {
-      // Para nueva incidencia, poner fecha actual por defecto
-      const ahora = new Date();
-      const fechaLocal = new Date(ahora.getTime() - (ahora.getTimezoneOffset() * 60000))
-        .toISOString()
-        .slice(0, 16);
-      setFormData(prev => ({
-        ...prev,
-        fechaHoraIncidente: fechaLocal
-      }));
     }
   }, [id]);
 
   const cargarIncidencia = async () => {
     try {
-      setLoading(true);
       const response = await api.get(`/incidencias/${id}`);
-      const incidencia = response.data;
-      
-      // Formatear fecha para input datetime-local
-      const fecha = new Date(incidencia.fechaHoraIncidente);
-      const fechaLocal = new Date(fecha.getTime() - (fecha.getTimezoneOffset() * 60000))
-        .toISOString()
-        .slice(0, 16);
-      
+      const inc = response.data;
       setFormData({
-        ...incidencia,
-        fechaHoraIncidente: fechaLocal
+        alumnoNombre: inc.alumnoNombre,
+        descripcion: inc.descripcion,
+        fechaHoraIncidente: inc.fechaHoraIncidente?.slice(0, 16),
+        tipoIncidencia: inc.tipoIncidencia,
+        estado: inc.estado,
+        solucionId: inc.solucion?.id || '',
+        sensacionId: inc.sensacion?.id || ''
       });
-      setError('');
     } catch (err) {
       setError('Error al cargar la incidencia');
-      console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
+    setFormData({
+      ...formData,
       [name]: value
-    }));
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
     setLoading(true);
+    setError('');
 
     try {
+      // Preparar datos para enviar
+      const datosEnvio = {
+        ...formData,
+        solucionId: formData.solucionId || null,
+        sensacionId: formData.sensacionId || null
+      };
+
       if (isEditing) {
-        await api.put(`/incidencias/${id}`, formData);
-        setSuccess('Incidencia actualizada correctamente');
+        await api.put(`/incidencias/${id}`, datosEnvio);
       } else {
-        await api.post('/incidencias', formData);
-        setSuccess('Incidencia creada correctamente');
+        await api.post('/incidencias', datosEnvio);
       }
-      
-      // Esperar 2 segundos y redirigir
-      setTimeout(() => {
-        navigate('/incidencias');
-      }, 2000);
-      
+      navigate('/incidencias');
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al guardar la incidencia');
-      console.error(err);
+      setError('Error al guardar la incidencia');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading && isEditing) {
-    return (
-      <div className="container mt-4">
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando...</span>
-          </div>
-        </div>
-      </div>
-    );
+  if (loadingOptions) {
+    return <div className="text-center mt-5">Cargando opciones...</div>;
   }
 
   return (
@@ -122,181 +110,136 @@ const IncidenciaForm = () => {
       <div className="row justify-content-center">
         <div className="col-md-8">
           <div className="card">
-            <div className="card-header bg-primary text-white">
-              <h4 className="mb-0">
-                {isEditing ? 'Editar Incidencia' : 'Nueva Incidencia'}
-              </h4>
-            </div>
             <div className="card-body">
-              
+              <h2 className="card-title text-center mb-4">
+                {isEditing ? 'Editar Incidencia' : 'Nueva Incidencia'}
+              </h2>
+
               {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
-                </div>
-              )}
-              
-              {success && (
-                <div className="alert alert-success" role="alert">
-                  {success} Redirigiendo...
-                </div>
+                <div className="alert alert-danger">{error}</div>
               )}
 
               <form onSubmit={handleSubmit}>
-                
-                {/* Alumno */}
-                <div className="mb-3">
-                  <label htmlFor="alumnoNombre" className="form-label">
-                    Nombre del Alumno *
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="alumnoNombre"
-                    name="alumnoNombre"
-                    value={formData.alumnoNombre}
-                    onChange={handleChange}
-                    required
-                    maxLength="100"
-                  />
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Alumno *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="alumnoNombre"
+                      value={formData.alumnoNombre}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Fecha y Hora *</label>
+                    <input
+                      type="datetime-local"
+                      className="form-control"
+                      name="fechaHoraIncidente"
+                      value={formData.fechaHoraIncidente}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
                 </div>
 
-                {/* Descripción */}
                 <div className="mb-3">
-                  <label htmlFor="descripcion" className="form-label">
-                    Descripción *
-                  </label>
+                  <label className="form-label">Descripción *</label>
                   <textarea
                     className="form-control"
-                    id="descripcion"
                     name="descripcion"
                     rows="3"
                     value={formData.descripcion}
                     onChange={handleChange}
                     required
-                    maxLength="500"
                   />
                 </div>
 
-                {/* Fecha y hora */}
-                <div className="mb-3">
-                  <label htmlFor="fechaHoraIncidente" className="form-label">
-                    Fecha y hora del incidente *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    className="form-control"
-                    id="fechaHoraIncidente"
-                    name="fechaHoraIncidente"
-                    value={formData.fechaHoraIncidente}
-                    onChange={handleChange}
-                    required
-                  />
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Tipo *</label>
+                    <select
+                      className="form-select"
+                      name="tipoIncidencia"
+                      value={formData.tipoIncidencia}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="LEVE">LEVE</option>
+                      <option value="GRAVE">GRAVE</option>
+                      <option value="MUY_GRAVE">MUY GRAVE</option>
+                    </select>
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Estado *</label>
+                    <select
+                      className="form-select"
+                      name="estado"
+                      value={formData.estado}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="PENDIENTE">PENDIENTE</option>
+                      <option value="EN_REVISION">EN REVISIÓN</option>
+                      <option value="RESUELTA">RESUELTA</option>
+                    </select>
+                  </div>
                 </div>
 
-                {/* Tipo de incidencia */}
-                <div className="mb-3">
-                  <label htmlFor="tipoIncidencia" className="form-label">
-                    Tipo de Incidencia *
-                  </label>
-                  <select
-                    className="form-select"
-                    id="tipoIncidencia"
-                    name="tipoIncidencia"
-                    value={formData.tipoIncidencia}
-                    onChange={handleChange}
-                    required
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Solución</label>
+                    <select
+                      className="form-select"
+                      name="solucionId"
+                      value={formData.solucionId}
+                      onChange={handleChange}
+                    >
+                      <option value="">-- Seleccionar --</option>
+                      {soluciones.map(sol => (
+                        <option key={sol.id} value={sol.id}>
+                          {sol.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Sensación</label>
+                    <select
+                      className="form-select"
+                      name="sensacionId"
+                      value={formData.sensacionId}
+                      onChange={handleChange}
+                    >
+                      <option value="">-- Seleccionar --</option>
+                      {sensaciones.map(sen => (
+                        <option key={sen.id} value={sen.id}>
+                          {sen.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="d-grid gap-2">
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary"
+                    disabled={loading}
                   >
-                    {tiposIncidencia.map(tipo => (
-                      <option key={tipo} value={tipo}>
-                        {tipo.replace('_', ' ')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Estado */}
-                <div className="mb-3">
-                  <label htmlFor="estado" className="form-label">
-                    Estado *
-                  </label>
-                  <select
-                    className="form-select"
-                    id="estado"
-                    name="estado"
-                    value={formData.estado}
-                    onChange={handleChange}
-                    required
-                  >
-                    {estados.map(estado => (
-                      <option key={estado} value={estado}>
-                        {estado.replace('_', ' ')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Solución */}
-                <div className="mb-3">
-                  <label htmlFor="solucion" className="form-label">
-                    Solución aplicada
-                  </label>
-                  <select
-                    className="form-select"
-                    id="solucion"
-                    name="solucion"
-                    value={formData.solucion}
-                    onChange={handleChange}
-                  >
-                    {soluciones.map(sol => (
-                      <option key={sol} value={sol}>
-                        {sol.replace('_', ' ')}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Sensación del alumno */}
-                <div className="mb-3">
-                  <label htmlFor="sensacion" className="form-label">
-                    Sensación del alumno
-                  </label>
-                  <select
-                    className="form-select"
-                    id="sensacion"
-                    name="sensacion"
-                    value={formData.sensacion}
-                    onChange={handleChange}
-                  >
-                    {sensaciones.map(sen => (
-                      <option key={sen} value={sen}>
-                        {sen}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Botones */}
-                <div className="d-flex justify-content-end gap-2">
-                  <button
-                    type="button"
+                    {loading ? 'Guardando...' : 'Guardar'}
+                  </button>
+                  <button 
+                    type="button" 
                     className="btn btn-secondary"
                     onClick={() => navigate('/incidencias')}
                   >
                     Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Guardando...
-                      </>
-                    ) : (
-                      isEditing ? 'Actualizar' : 'Crear Incidencia'
-                    )}
                   </button>
                 </div>
               </form>
