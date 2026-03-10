@@ -195,8 +195,9 @@ public class IncidenciaController {
             @RequestParam(required = false) String fecha,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String estado,
-            @RequestParam(required = false) String sensacion) {
+            @RequestParam(required = false) String sensacion,
+            @RequestParam(required = false) String solucion) {
 
-        return incidenciaService.filtrar(alumno, fecha, tipo, estado, sensacion);
+        return incidenciaService.filtrar(alumno, fecha, tipo, estado, sensacion, solucion);
     }
 }

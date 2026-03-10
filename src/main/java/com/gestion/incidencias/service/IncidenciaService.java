@@ -35,12 +35,11 @@ public class IncidenciaService {
     }
 
     public List<Incidencia> filtrar(String alumno, String fecha, String tipo,
-                                    String estado, String sensacion) {
+                                    String estado, String sensacion, String solucion) {
 
-        // Empezamos con todas las incidencias
         List<Incidencia> resultados = obtenerTodas();
 
-        // Filtrar por alumno (búsqueda parcial, case insensitive)
+        // Filtrar por alumno
         if (alumno != null && !alumno.trim().isEmpty()) {
             resultados = resultados.stream()
                     .filter(i -> i.getAlumnoNombre().toLowerCase()
@@ -48,7 +47,7 @@ public class IncidenciaService {
                     .collect(Collectors.toList());
         }
 
-        // Filtrar por fecha exacta
+        // Filtrar por fecha
         if (fecha != null && !fecha.trim().isEmpty()) {
             LocalDate fechaFiltro = LocalDate.parse(fecha);
             resultados = resultados.stream()
@@ -70,12 +69,21 @@ public class IncidenciaService {
                     .collect(Collectors.toList());
         }
 
-        // Filtrar por sensación (por nombre de la sensación)
+        // Filtrar por sensación
         if (sensacion != null && !sensacion.trim().isEmpty()) {
             resultados = resultados.stream()
                     .filter(i -> i.getSensacion() != null &&
                             i.getSensacion().getNombre().toLowerCase()
                                     .contains(sensacion.toLowerCase().trim()))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por solución
+        if (solucion != null && !solucion.trim().isEmpty()) {
+            resultados = resultados.stream()
+                    .filter(i -> i.getSolucion() != null &&
+                            i.getSolucion().getNombre().toLowerCase()
+                                    .contains(solucion.toLowerCase().trim()))
                     .collect(Collectors.toList());
         }
 
