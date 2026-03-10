@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 
 const IncidenciaFiltros = ({ onFiltrar }) => {
   const [filtros, setFiltros] = useState({
@@ -6,10 +7,25 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
     fecha: '',
     tipo: '',
     estado: '',
-    sensacion: ''
+    sensacion: '',
+    solucion: ''  // ✅ NUEVO
   });
 
+  const [soluciones, setSoluciones] = useState([]);
   const [filtrosActivos, setFiltrosActivos] = useState(false);
+
+  // Cargar soluciones para el select
+  useEffect(() => {
+    const cargarSoluciones = async () => {
+      try {
+        const response = await api.get('/soluciones/activas');
+        setSoluciones(response.data);
+      } catch (err) {
+        console.error('Error cargando soluciones:', err);
+      }
+    };
+    cargarSoluciones();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,7 +38,6 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Contar cuántos filtros tienen valor
     const count = Object.values(filtros).filter(v => v !== '').length;
     setFiltrosActivos(count > 0);
     
@@ -35,15 +50,16 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
       fecha: '',
       tipo: '',
       estado: '',
-      sensacion: ''
+      sensacion: '',
+      solucion: ''
     };
     setFiltros(filtrosVacios);
     setFiltrosActivos(false);
-    onFiltrar(filtrosVacios); // Esto recargará todas las incidencias
+    onFiltrar(filtrosVacios);
   };
 
   return (
-    <div className="card mb-4 shadow-sm">
+    <div className="card filtros-card mb-4">
       <div className="card-body">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="card-title mb-0">
@@ -109,8 +125,8 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
                 <option value="RESUELTA">RESUELTA</option>
               </select>
             </div>
-            
-            <div className="col-md-3">
+
+            <div className="col-md-2">
               <label className="form-label">Sensación</label>
               <select
                 className="form-select"
@@ -123,6 +139,24 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
                 <option value="INDIFERENTE">INDIFERENTE</option>
                 <option value="DESAFIANTE">DESAFIANTE</option>
                 <option value="REINCIDENTE">REINCIDENTE</option>
+              </select>
+            </div>
+
+            {/* ✅ NUEVO: Selector de solución */}
+            <div className="col-md-2">
+              <label className="form-label">Solución</label>
+              <select
+                className="form-select"
+                name="solucion"
+                value={filtros.solucion}
+                onChange={handleChange}
+              >
+                <option value="">Todas</option>
+                {soluciones.map(sol => (
+                  <option key={sol.id} value={sol.nombre}>
+                    {sol.nombre}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

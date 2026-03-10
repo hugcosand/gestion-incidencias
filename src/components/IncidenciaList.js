@@ -18,28 +18,30 @@ const IncidenciaList = () => {
   }, []);
 
   const cargarIncidencias = async (filtros = {}) => {
-    try {
-      setLoading(true);
-      
-      const params = new URLSearchParams();
-      if (filtros.alumno?.trim()) params.append('alumno', filtros.alumno.trim());
-      if (filtros.fecha) params.append('fecha', filtros.fecha);
-      if (filtros.tipo) params.append('tipo', filtros.tipo);
-      if (filtros.estado) params.append('estado', filtros.estado);
-      if (filtros.sensacion) params.append('sensacion', filtros.sensacion);
-      
-      const queryString = params.toString();
-      const url = `/incidencias/filtrar${queryString ? '?' + queryString : ''}`;
-      
-      const response = await api.get(url);
-      setIncidencias(response.data);
-      setError('');
-    } catch (err) {
-      setError('Error al cargar las incidencias');
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+    
+    const params = new URLSearchParams();
+    
+    if (filtros.alumno?.trim()) params.append('alumno', filtros.alumno.trim());
+    if (filtros.fecha) params.append('fecha', filtros.fecha);
+    if (filtros.tipo) params.append('tipo', filtros.tipo);
+    if (filtros.estado) params.append('estado', filtros.estado);
+    if (filtros.sensacion) params.append('sensacion', filtros.sensacion);
+    if (filtros.solucion) params.append('solucion', filtros.solucion);  // ✅ NUEVO
+    
+    const queryString = params.toString();
+    const url = `/incidencias/filtrar${queryString ? '?' + queryString : ''}`;
+    
+    const response = await api.get(url);
+    setIncidencias(response.data);
+    setError('');
+  } catch (err) {
+    setError('Error al cargar las incidencias');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDelete = async (id, alumno) => {
     if (window.confirm(`¿Está seguro de eliminar la incidencia de ${alumno}?`)) {
