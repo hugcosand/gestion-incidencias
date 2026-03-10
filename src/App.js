@@ -10,6 +10,7 @@ import authService from './services/auth';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import Registro from './components/Registro';
+import Calendario from './components/Calendario'; 
 import SolucionList from './components/SolucionList';
 import SolucionForm from './components/SolucionForm';
 import SensacionList from './components/SensacionList';
@@ -39,7 +40,7 @@ function App() {
       <div className="App">
         <Routes>
           {/* Rutas públicas */}
-          <Route path="/registro" element={<Registro />} />              {/* ✅ NUEVA */}
+          <Route path="/registro" element={<Registro />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<Login />} />
@@ -72,6 +73,16 @@ function App() {
             </PrivateRoute>
           } />
           
+          {/* ✅ NUEVA RUTA DEL CALENDARIO */}
+          <Route path="/calendario" element={
+            <PrivateRoute>
+              <>
+                <Navbar />
+                <Calendario />
+              </>
+            </PrivateRoute>
+          } />
+          
           {/* Gestión de usuarios (solo ADMIN) */}
           <Route path="/usuarios" element={
             <AdminRoute>
@@ -100,6 +111,7 @@ function App() {
             </AdminRoute>
           } />
 
+          {/* Rutas de soluciones (solo ADMIN) */}
           <Route path="/soluciones" element={
             <AdminRoute>
               <>
@@ -108,7 +120,7 @@ function App() {
               </>
             </AdminRoute>
           } />
-
+          
           <Route path="/soluciones/nueva" element={
             <AdminRoute>
               <>
@@ -117,7 +129,7 @@ function App() {
               </>
             </AdminRoute>
           } />
-
+          
           <Route path="/soluciones/editar/:id" element={
             <AdminRoute>
               <>
@@ -127,6 +139,7 @@ function App() {
             </AdminRoute>
           } />
 
+          {/* Rutas de sensaciones (solo ADMIN) */}
           <Route path="/sensaciones" element={
             <AdminRoute>
               <>
@@ -135,27 +148,27 @@ function App() {
               </>
             </AdminRoute>
           } />
-
+          
           <Route path="/sensaciones/nueva" element={
             <AdminRoute>
               <>
                 <Navbar />
                 <SensacionForm />
-        </>
-      </AdminRoute>
-    } />
-
-    <Route path="/sensaciones/editar/:id" element={
-      <AdminRoute>
-        <>
-          <Navbar />
-          <SensacionForm />
-        </>
-      </AdminRoute>
-    } />
-            </Routes>
-          </div>
-        </HashRouter>
+              </>
+            </AdminRoute>
+          } />
+          
+          <Route path="/sensaciones/editar/:id" element={
+            <AdminRoute>
+              <>
+                <Navbar />
+                <SensacionForm />
+              </>
+            </AdminRoute>
+          } />
+        </Routes>
+      </div>
+    </HashRouter>
   );
 }
 

@@ -47,6 +47,14 @@ const Navbar = () => {
                 </Link>
               </li>
             )}
+
+            {/* NUEVO ENLACE AL CALENDARIO - Visible para todos */}
+            <li className="nav-item">
+              <Link className="nav-link" to="/calendario">
+                <i className="bi bi-calendar-week me-1"></i>
+                Calendario
+              </Link>
+            </li>
             
             {isAdmin && (
               <>
