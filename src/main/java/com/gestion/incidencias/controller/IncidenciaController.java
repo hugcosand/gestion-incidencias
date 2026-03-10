@@ -4,7 +4,11 @@ import com.gestion.incidencias.dto.IncidenciaDTO;
 import com.gestion.incidencias.entity.Incidencia;
 import com.gestion.incidencias.entity.Usuario;
 import com.gestion.incidencias.entity.Rol;
+import com.gestion.incidencias.entity.Solucion;
+import com.gestion.incidencias.entity.Sensacion;
 import com.gestion.incidencias.service.IncidenciaService;
+import com.gestion.incidencias.service.SolucionService;
+import com.gestion.incidencias.service.SensacionService;
 import com.gestion.incidencias.util.UsuarioUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,10 +29,17 @@ public class IncidenciaController {
 
     private final IncidenciaService incidenciaService;
     private final UsuarioUtil usuarioUtil;
+    private final SolucionService solucionService;
+    private final SensacionService sensacionService;
 
-    public IncidenciaController(IncidenciaService incidenciaService, UsuarioUtil usuarioUtil) {
+    public IncidenciaController(IncidenciaService incidenciaService,
+                                UsuarioUtil usuarioUtil,
+                                SolucionService solucionService,
+                                SensacionService sensacionService) {
         this.incidenciaService = incidenciaService;
         this.usuarioUtil = usuarioUtil;
+        this.solucionService = solucionService;
+        this.sensacionService = sensacionService;
     }
 
     @GetMapping
@@ -52,27 +63,43 @@ public class IncidenciaController {
     public ResponseEntity<?> crear(@Valid @RequestBody IncidenciaDTO incidenciaDTO) {
         Usuario usuario = usuarioUtil.getUsuarioFromRequest();
 
-        // ✅ AHORA: ADMIN y PROFESOR pueden crear incidencias
+        // Permitir ADMIN y PROFESOR
         if (usuario.getRol() != Rol.ADMIN && usuario.getRol() != Rol.PROFESOR) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("No tienes permisos para crear incidencias");
         }
 
-        // Convertir DTO a Entidad
-        Incidencia incidencia = new Incidencia();
-        incidencia.setAlumnoNombre(incidenciaDTO.getAlumnoNombre());
-        incidencia.setDescripcion(incidenciaDTO.getDescripcion());
-        incidencia.setFechaHoraIncidente(incidenciaDTO.getFechaHoraIncidente());
-        incidencia.setTipoIncidencia(incidenciaDTO.getTipoIncidencia());
-        incidencia.setEstado(incidenciaDTO.getEstado());
-        incidencia.setSolucion(incidenciaDTO.getSolucion());
-        incidencia.setSensacion(incidenciaDTO.getSensacion());
+        try {
+            // Convertir DTO a Entidad
+            Incidencia incidencia = new Incidencia();
+            incidencia.setAlumnoNombre(incidenciaDTO.getAlumnoNombre());
+            incidencia.setDescripcion(incidenciaDTO.getDescripcion());
+            incidencia.setFechaHoraIncidente(incidenciaDTO.getFechaHoraIncidente());
+            incidencia.setTipoIncidencia(incidenciaDTO.getTipoIncidencia());
+            incidencia.setEstado(incidenciaDTO.getEstado());
 
-        // Asignar profesor desde el header (quien crea la incidencia)
-        incidencia.setProfesor(usuario);
+            // Buscar solucion por ID si viene
+            if (incidenciaDTO.getSolucionId() != null) {
+                Solucion solucion = solucionService.obtenerPorId(incidenciaDTO.getSolucionId());
+                incidencia.setSolucion(solucion);
+            }
 
-        Incidencia nueva = incidenciaService.guardar(incidencia);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
+            // Buscar sensacion por ID si viene
+            if (incidenciaDTO.getSensacionId() != null) {
+                Sensacion sensacion = sensacionService.obtenerPorId(incidenciaDTO.getSensacionId());
+                incidencia.setSensacion(sensacion);
+            }
+
+            // Asignar profesor desde el header (quien crea la incidencia)
+            incidencia.setProfesor(usuario);
+
+            Incidencia nueva = incidenciaService.guardar(incidencia);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nueva);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al crear la incidencia: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
@@ -91,26 +118,46 @@ public class IncidenciaController {
             return ResponseEntity.notFound().build();
         }
 
-        // ✅ Si es PROFESOR, verificar que sea el creador de la incidencia
+        // Si es PROFESOR, verificar que sea el creador de la incidencia
         if (usuario.getRol() == Rol.PROFESOR &&
                 !incidenciaExistente.getProfesor().getId().equals(usuario.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body("Solo puedes editar tus propias incidencias");
         }
 
-        // Actualizar campos desde DTO
-        incidenciaExistente.setAlumnoNombre(incidenciaDTO.getAlumnoNombre());
-        incidenciaExistente.setDescripcion(incidenciaDTO.getDescripcion());
-        incidenciaExistente.setFechaHoraIncidente(incidenciaDTO.getFechaHoraIncidente());
-        incidenciaExistente.setTipoIncidencia(incidenciaDTO.getTipoIncidencia());
-        incidenciaExistente.setEstado(incidenciaDTO.getEstado());
-        incidenciaExistente.setSolucion(incidenciaDTO.getSolucion());
-        incidenciaExistente.setSensacion(incidenciaDTO.getSensacion());
+        try {
+            // Actualizar campos desde DTO
+            incidenciaExistente.setAlumnoNombre(incidenciaDTO.getAlumnoNombre());
+            incidenciaExistente.setDescripcion(incidenciaDTO.getDescripcion());
+            incidenciaExistente.setFechaHoraIncidente(incidenciaDTO.getFechaHoraIncidente());
+            incidenciaExistente.setTipoIncidencia(incidenciaDTO.getTipoIncidencia());
+            incidenciaExistente.setEstado(incidenciaDTO.getEstado());
 
-        // No cambiamos el profesor en actualización (se mantiene el creador original)
+            // Actualizar solucion si viene
+            if (incidenciaDTO.getSolucionId() != null) {
+                Solucion solucion = solucionService.obtenerPorId(incidenciaDTO.getSolucionId());
+                incidenciaExistente.setSolucion(solucion);
+            } else {
+                incidenciaExistente.setSolucion(null);
+            }
 
-        Incidencia actualizada = incidenciaService.guardar(incidenciaExistente);
-        return ResponseEntity.ok(actualizada);
+            // Actualizar sensacion si viene
+            if (incidenciaDTO.getSensacionId() != null) {
+                Sensacion sensacion = sensacionService.obtenerPorId(incidenciaDTO.getSensacionId());
+                incidenciaExistente.setSensacion(sensacion);
+            } else {
+                incidenciaExistente.setSensacion(null);
+            }
+
+            // No cambiamos el profesor en actualización (se mantiene el creador original)
+
+            Incidencia actualizada = incidenciaService.guardar(incidenciaExistente);
+            return ResponseEntity.ok(actualizada);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al actualizar la incidencia: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
@@ -123,13 +170,13 @@ public class IncidenciaController {
             return ResponseEntity.notFound().build();
         }
 
-        // ✅ ADMIN puede eliminar cualquier incidencia
+        // ADMIN puede eliminar cualquier incidencia
         if (usuario.getRol() == Rol.ADMIN) {
             incidenciaService.eliminar(id);
             return ResponseEntity.noContent().build();
         }
 
-        // ✅ PROFESOR solo puede eliminar sus propias incidencias (opcional)
+        // PROFESOR solo puede eliminar sus propias incidencias
         if (usuario.getRol() == Rol.PROFESOR &&
                 incidencia.getProfesor().getId().equals(usuario.getId())) {
             incidenciaService.eliminar(id);

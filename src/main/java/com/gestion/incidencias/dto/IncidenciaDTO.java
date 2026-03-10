@@ -2,8 +2,7 @@ package com.gestion.incidencias.dto;
 
 import com.gestion.incidencias.entity.Estado;
 import com.gestion.incidencias.entity.TipoIncidencia;
-import com.gestion.incidencias.entity.Solucion;
-import com.gestion.incidencias.entity.Sensacion;
+
 import java.time.LocalDateTime;
 
 public class IncidenciaDTO {
@@ -12,8 +11,8 @@ public class IncidenciaDTO {
     private LocalDateTime fechaHoraIncidente;
     private TipoIncidencia tipoIncidencia;
     private Estado estado;
-    private Solucion solucion;
-    private Sensacion sensacion;
+    private Long solucionId;
+    private Long sensacionId;
 
     // Getters y Setters
     public String getAlumnoNombre() {
@@ -56,19 +55,20 @@ public class IncidenciaDTO {
         this.estado = estado;
     }
 
-    public Solucion getSolucion() {
-        return solucion;
+    // Getters y Setters
+    public Long getSolucionId() {
+        return solucionId;
     }
 
-    public void setSolucion(Solucion solucion) {
-        this.solucion = solucion;
+    public void setSolucionId(Long solucionId) {
+        this.solucionId = solucionId;
     }
 
-    public Sensacion getSensacion() {
-        return sensacion;
+    public Long getSensacionId() {
+        return sensacionId;
     }
 
-    public void setSensacion(Sensacion sensacion) {
-        this.sensacion = sensacion;
+    public void setSensacionId(Long sensacionId) {
+        this.sensacionId = sensacionId;
     }
 }

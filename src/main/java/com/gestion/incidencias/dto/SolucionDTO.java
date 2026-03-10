@@ -1,33 +1,20 @@
-package com.gestion.incidencias.entity;
+package com.gestion.incidencias.dto;
 
-import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.NotBlank;
 
-@Entity
-@Table(name = "soluciones")
-public class Solucion {
+public class SolucionDTO {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @NotBlank(message = "El nombre es obligatorio")
     private String nombre;
 
     private String descripcion;
 
-    @Column(nullable = false)
-    private Boolean activo = true;
+    private Boolean activo;
 
     // Constructor vacío
-    public Solucion() {}
-
-    // Constructor con parámetros
-    public Solucion(String nombre, String descripcion) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.activo = true;
-    }
+    public SolucionDTO() {}
 
     // Getters y Setters
     public Long getId() {

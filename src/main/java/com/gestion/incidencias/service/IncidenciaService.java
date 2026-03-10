@@ -1,7 +1,6 @@
 package com.gestion.incidencias.service;
 
 import com.gestion.incidencias.entity.Incidencia;
-import com.gestion.incidencias.entity.Estado;
 import com.gestion.incidencias.repository.IncidenciaRepository;
 import org.springframework.stereotype.Service;
 
@@ -71,11 +70,12 @@ public class IncidenciaService {
                     .collect(Collectors.toList());
         }
 
-        // Filtrar por sensación
+        // Filtrar por sensación (por nombre de la sensación)
         if (sensacion != null && !sensacion.trim().isEmpty()) {
             resultados = resultados.stream()
                     .filter(i -> i.getSensacion() != null &&
-                            i.getSensacion().name().equals(sensacion))
+                            i.getSensacion().getNombre().toLowerCase()
+                                    .contains(sensacion.toLowerCase().trim()))
                     .collect(Collectors.toList());
         }
 

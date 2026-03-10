@@ -31,14 +31,33 @@ public class Incidencia {
     @Enumerated(EnumType.STRING)
     private TipoIncidencia tipoIncidencia;
 
-    @Enumerated(EnumType.STRING)
-    private Solucion solucion;
-
-    @Enumerated(EnumType.STRING)
-    private Sensacion sensacion;
-
     // Relación con el profesor que crea la incidencia
     @ManyToOne
     @JoinColumn(name = "profesor_id", nullable = false)
     private Usuario profesor;
+
+    @ManyToOne
+    @JoinColumn(name = "solucion_id")
+    private Solucion solucion;
+
+    @ManyToOne
+    @JoinColumn(name = "sensacion_id")
+    private Sensacion sensacion;
+
+    // Getters y Setters
+    public Solucion getSolucion() {
+        return solucion;
+    }
+
+    public void setSolucion(Solucion solucion) {
+        this.solucion = solucion;
+    }
+
+    public Sensacion getSensacion() {
+        return sensacion;
+    }
+
+    public void setSensacion(Sensacion sensacion) {
+        this.sensacion = sensacion;
+    }
 }
