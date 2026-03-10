@@ -118,4 +118,30 @@ public class UsuarioController {
                     .body("Error al registrar usuario: " + e.getMessage());
         }
     }
+
+    @PatchMapping("/{id}/desactivar")
+    @Operation(summary = "Desactivar usuario (no eliminar, solo cambiar estado)")
+    public ResponseEntity<Usuario> desactivar(@PathVariable Long id) {
+        checkAdmin();
+        Usuario usuario = usuarioService.obtenerPorId(id);
+        if (usuario == null) {
+            return ResponseEntity.notFound().build();
+        }
+        usuario.setActivo(false);
+        Usuario actualizado = usuarioService.guardar(usuario);
+        return ResponseEntity.ok(actualizado);
+    }
+
+    @PatchMapping("/{id}/activar")
+    @Operation(summary = "Activar usuario")
+    public ResponseEntity<Usuario> activar(@PathVariable Long id) {
+        checkAdmin();
+        Usuario usuario = usuarioService.obtenerPorId(id);
+        if (usuario == null) {
+            return ResponseEntity.notFound().build();
+        }
+        usuario.setActivo(true);
+        Usuario actualizado = usuarioService.guardar(usuario);
+        return ResponseEntity.ok(actualizado);
+    }
 }

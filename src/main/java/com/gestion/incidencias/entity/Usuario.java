@@ -21,5 +21,5 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Rol rol;
 
-    private boolean activo;
+    private boolean activo = true;
 }
