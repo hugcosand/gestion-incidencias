@@ -109,7 +109,7 @@ const UsuarioList = () => {
                   <td><strong>{user.nombre}</strong></td>
                   <td>{user.email}</td>
                   <td>
-                    <span className={`badge ${user.rol === 'ADMIN' ? 'badge-primary' : 'badge-info'}`}>
+                    <span className={`badge ${user.rol === 'ADMIN' ? 'badge-danger' : 'badge-info'}`}>
                       {user.rol}
                     </span>
                   </td>
