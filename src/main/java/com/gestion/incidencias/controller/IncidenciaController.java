@@ -7,6 +7,7 @@ import com.gestion.incidencias.entity.Rol;
 import com.gestion.incidencias.entity.Solucion;
 import com.gestion.incidencias.entity.Sensacion;
 import com.gestion.incidencias.service.IncidenciaService;
+import com.gestion.incidencias.service.NotificacionService;
 import com.gestion.incidencias.service.SolucionService;
 import com.gestion.incidencias.service.SensacionService;
 import com.gestion.incidencias.util.UsuarioUtil;
@@ -31,15 +32,18 @@ public class IncidenciaController {
     private final UsuarioUtil usuarioUtil;
     private final SolucionService solucionService;
     private final SensacionService sensacionService;
+    private final NotificacionService notificacionService;
 
     public IncidenciaController(IncidenciaService incidenciaService,
                                 UsuarioUtil usuarioUtil,
                                 SolucionService solucionService,
-                                SensacionService sensacionService) {
+                                SensacionService sensacionService,
+                                NotificacionService notificacionService) {
         this.incidenciaService = incidenciaService;
         this.usuarioUtil = usuarioUtil;
         this.solucionService = solucionService;
         this.sensacionService = sensacionService;
+        this.notificacionService = notificacionService;
     }
 
     @GetMapping
@@ -152,6 +156,9 @@ public class IncidenciaController {
             // No cambiamos el profesor en actualización (se mantiene el creador original)
 
             Incidencia actualizada = incidenciaService.guardar(incidenciaExistente);
+
+            notificacionService.crearNotificacionIncidenciaActualizada(actualizada, usuario);
+
             return ResponseEntity.ok(actualizada);
 
         } catch (Exception e) {

@@ -144,4 +144,15 @@ public class UsuarioController {
         Usuario actualizado = usuarioService.guardar(usuario);
         return ResponseEntity.ok(actualizado);
     }
+
+    @GetMapping("/filtrar")
+    @Operation(summary = "Filtrar usuarios por nombre, email o rol")
+    public List<Usuario> filtrar(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String rol) {
+
+        checkAdmin();
+        return usuarioService.filtrar(nombre, email, rol);
+    }
 }
