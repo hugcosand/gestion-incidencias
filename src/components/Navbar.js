@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/auth';
+import NotificacionesDropdown from './NotificacionesDropdown';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -81,6 +82,9 @@ const Navbar = () => {
           </ul>
 
           <div className="d-flex align-items-center">
+
+            <NotificacionesDropdown />
+
             <div className="text-white me-3">
               <i className="bi bi-person-circle me-1"></i>
               <span className="fw-medium">{user?.nombre}</span>
