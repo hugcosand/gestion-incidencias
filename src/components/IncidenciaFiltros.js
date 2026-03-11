@@ -8,23 +8,29 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
     tipo: '',
     estado: '',
     sensacion: '',
-    solucion: ''  // ✅ NUEVO
+    solucion: '',
+    profesor: ''  // ✅ Campo de texto
   });
 
   const [soluciones, setSoluciones] = useState([]);
+  const [sensaciones, setSensaciones] = useState([]);
   const [filtrosActivos, setFiltrosActivos] = useState(false);
 
-  // Cargar soluciones para el select
+  // Cargar soluciones y sensaciones (los profesores no hacen falta ya)
   useEffect(() => {
-    const cargarSoluciones = async () => {
+    const cargarOpciones = async () => {
       try {
-        const response = await api.get('/soluciones/activas');
-        setSoluciones(response.data);
+        const [solRes, sensRes] = await Promise.all([
+          api.get('/soluciones/activas'),
+          api.get('/sensaciones/activas')
+        ]);
+        setSoluciones(solRes.data);
+        setSensaciones(sensRes.data);
       } catch (err) {
-        console.error('Error cargando soluciones:', err);
+        console.error('Error cargando opciones:', err);
       }
     };
-    cargarSoluciones();
+    cargarOpciones();
   }, []);
 
   const handleChange = (e) => {
@@ -51,7 +57,8 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
       tipo: '',
       estado: '',
       sensacion: '',
-      solucion: ''
+      solucion: '',
+      profesor: ''
     };
     setFiltros(filtrosVacios);
     setFiltrosActivos(false);
@@ -73,6 +80,7 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
         
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
+            {/* Primera fila */}
             <div className="col-md-3">
               <label className="form-label">Alumno</label>
               <input
@@ -126,7 +134,8 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
               </select>
             </div>
 
-            <div className="col-md-2">
+            {/* Segunda fila */}
+            <div className="col-md-3">
               <label className="form-label">Sensación</label>
               <select
                 className="form-select"
@@ -135,15 +144,15 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
                 onChange={handleChange}
               >
                 <option value="">Todas</option>
-                <option value="ARREPENTIDO">ARREPENTIDO</option>
-                <option value="INDIFERENTE">INDIFERENTE</option>
-                <option value="DESAFIANTE">DESAFIANTE</option>
-                <option value="REINCIDENTE">REINCIDENTE</option>
+                {sensaciones.map(sen => (
+                  <option key={sen.id} value={sen.nombre}>
+                    {sen.nombre}
+                  </option>
+                ))}
               </select>
             </div>
 
-            {/* ✅ NUEVO: Selector de solución */}
-            <div className="col-md-2">
+            <div className="col-md-3">
               <label className="form-label">Solución</label>
               <select
                 className="form-select"
@@ -158,6 +167,20 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* ✅ NUEVO: Campo de texto para profesor (búsqueda parcial) */}
+            <div className="col-md-3">
+              <label className="form-label">Profesor</label>
+              <input
+                type="text"
+                className="form-control"
+                name="profesor"
+                placeholder="Nombre del profesor"
+                value={filtros.profesor}
+                onChange={handleChange}
+              />
+              <small className="text-muted">Escribe parte del nombre</small>
             </div>
           </div>
           

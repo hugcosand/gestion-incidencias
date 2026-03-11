@@ -28,7 +28,8 @@ const IncidenciaList = () => {
     if (filtros.tipo) params.append('tipo', filtros.tipo);
     if (filtros.estado) params.append('estado', filtros.estado);
     if (filtros.sensacion) params.append('sensacion', filtros.sensacion);
-    if (filtros.solucion) params.append('solucion', filtros.solucion);  // ✅ NUEVO
+    if (filtros.solucion) params.append('solucion', filtros.solucion);
+    if (filtros.profesor) params.append('profesor', filtros.profesor);
     
     const queryString = params.toString();
     const url = `/incidencias/filtrar${queryString ? '?' + queryString : ''}`;
