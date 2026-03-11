@@ -19,7 +19,6 @@ public class NotificacionService {
 
     @Transactional
     public void crearNotificacionIncidenciaActualizada(Incidencia incidencia, Usuario usuarioQueActualiza) {
-        // Solo crear notificación si quien actualiza NO es el dueño
         if (incidencia.getProfesor() != null &&
                 !incidencia.getProfesor().getId().equals(usuarioQueActualiza.getId())) {
 

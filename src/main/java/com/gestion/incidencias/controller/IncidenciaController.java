@@ -200,12 +200,14 @@ public class IncidenciaController {
     public List<Incidencia> filtrar(
             @RequestParam(required = false) String alumno,
             @RequestParam(required = false) String fecha,
+            @RequestParam(required = false) String hora,  // ✅ NUEVO: parámetro hora
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) String sensacion,
             @RequestParam(required = false) String solucion,
             @RequestParam(required = false) String profesor) {
 
-        return incidenciaService.filtrar(alumno, fecha, tipo, estado, sensacion, solucion, profesor);
+        //Llama al método del servicio con el nuevo parámetro hora
+        return incidenciaService.filtrar(alumno, fecha, hora, tipo, estado, sensacion, solucion, profesor);
     }
 }
