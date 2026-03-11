@@ -15,6 +15,7 @@ import SolucionList from './components/SolucionList';
 import SolucionForm from './components/SolucionForm';
 import SensacionList from './components/SensacionList';
 import SensacionForm from './components/SensacionForm';
+import IncidenciaDetalle from './components/IncidenciaDetalle';
 import './App.css';
 
 // Componente para proteger rutas (solo autenticados)
@@ -72,8 +73,12 @@ function App() {
               </>
             </PrivateRoute>
           } />
+
+          <Route path="/incidencias/:id" element={
+            <PrivateRoute><><Navbar /><IncidenciaDetalle /></></PrivateRoute>
+          } />
           
-          {/* ✅ NUEVA RUTA DEL CALENDARIO */}
+          {/* RUTA DEL CALENDARIO */}
           <Route path="/calendario" element={
             <PrivateRoute>
               <>

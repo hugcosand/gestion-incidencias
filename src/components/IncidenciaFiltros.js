@@ -5,18 +5,19 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
   const [filtros, setFiltros] = useState({
     alumno: '',
     fecha: '',
+    hora: '',           // ✅ NUEVO: campo para filtrar por hora
     tipo: '',
     estado: '',
     sensacion: '',
     solucion: '',
-    profesor: ''  // ✅ Campo de texto
+    profesor: ''
   });
 
   const [soluciones, setSoluciones] = useState([]);
   const [sensaciones, setSensaciones] = useState([]);
   const [filtrosActivos, setFiltrosActivos] = useState(false);
 
-  // Cargar soluciones y sensaciones (los profesores no hacen falta ya)
+  // Cargar soluciones y sensaciones
   useEffect(() => {
     const cargarOpciones = async () => {
       try {
@@ -44,16 +45,25 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    const count = Object.values(filtros).filter(v => v !== '').length;
+    // Crear objeto solo con filtros que tienen valor
+    const filtrosLimpios = {};
+    Object.keys(filtros).forEach(key => {
+      if (filtros[key] && filtros[key].trim() !== '') {
+        filtrosLimpios[key] = filtros[key];
+      }
+    });
+    
+    const count = Object.keys(filtrosLimpios).length;
     setFiltrosActivos(count > 0);
     
-    onFiltrar(filtros);
+    onFiltrar(filtrosLimpios);
   };
 
   const limpiarFiltros = () => {
     const filtrosVacios = {
       alumno: '',
       fecha: '',
+      hora: '',          // ✅ NUEVO: también limpiamos hora
       tipo: '',
       estado: '',
       sensacion: '',
@@ -82,7 +92,7 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
           <div className="row g-3">
             {/* Primera fila */}
             <div className="col-md-3">
-              <label className="form-label">Alumno</label>
+              <label className="form-label">Alumno/a</label>
               <input
                 type="text"
                 className="form-control"
@@ -103,6 +113,19 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
                 onChange={handleChange}
               />
             </div>
+
+            {/* ✅ NUEVO: Campo de hora */}
+            <div className="col-md-2">
+              <label className="form-label">Hora</label>
+              <input
+                type="time"
+                className="form-control"
+                name="hora"
+                value={filtros.hora}
+                onChange={handleChange}
+                step="3600"  // Opcional: para seleccionar solo horas en punto
+              />
+            </div>
             
             <div className="col-md-2">
               <label className="form-label">Tipo</label>
@@ -119,7 +142,7 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
               </select>
             </div>
             
-            <div className="col-md-2">
+            <div className="col-md-3">
               <label className="form-label">Estado</label>
               <select
                 className="form-select"
@@ -134,7 +157,7 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
               </select>
             </div>
 
-            {/* Segunda fila */}
+            {/* Segunda fila - Ajustamos los col-md para compensar el nuevo campo */}
             <div className="col-md-3">
               <label className="form-label">Sensación</label>
               <select
@@ -169,9 +192,8 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
               </select>
             </div>
 
-            {/* ✅ NUEVO: Campo de texto para profesor (búsqueda parcial) */}
             <div className="col-md-3">
-              <label className="form-label">Profesor</label>
+              <label className="form-label">Profesor/a</label>
               <input
                 type="text"
                 className="form-control"
@@ -180,8 +202,9 @@ const IncidenciaFiltros = ({ onFiltrar }) => {
                 value={filtros.profesor}
                 onChange={handleChange}
               />
-              <small className="text-muted">Escribe parte del nombre</small>
             </div>
+
+            
           </div>
           
           <div className="row mt-4">

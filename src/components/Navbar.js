@@ -41,15 +41,17 @@ const Navbar = () => {
             </li>
             
             {isAuthenticated && (
-              <li className="nav-item">
-                <Link className="nav-link" to="/incidencias/nueva">
-                  <i className="bi bi-plus-circle me-1"></i>
-                  Nueva Incidencia
-                </Link>
-              </li>
+              <>                
+                <li className="nav-item">
+                  <Link className="nav-link" to="/incidencias/nueva">
+                    <i className="bi bi-plus-circle me-1"></i>
+                    Nueva Incidencia
+                  </Link>
+                </li>
+              </>
             )}
 
-            {/* NUEVO ENLACE AL CALENDARIO - Visible para todos */}
+            {/* Enlace al Calendario */}
             <li className="nav-item">
               <Link className="nav-link" to="/calendario">
                 <i className="bi bi-calendar-week me-1"></i>
@@ -82,7 +84,6 @@ const Navbar = () => {
           </ul>
 
           <div className="d-flex align-items-center">
-
             <NotificacionesDropdown />
 
             <div className="text-white me-3">

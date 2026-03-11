@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';  // Añadido useNavigate
 import api from '../services/api';
 import authService from '../services/auth';
 import IncidenciaFiltros from './IncidenciaFiltros';
@@ -8,7 +8,11 @@ const IncidenciaList = () => {
   const [incidencias, setIncidencias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mostrarFiltros, setMostrarFiltros] = useState(  // NUEVO: estado para filtros
+    new URLSearchParams(window.location.search).get('filtros') === 'true'
+  );
   
+  const navigate = useNavigate();  // NUEVO: para navegación
   const user = authService.getCurrentUser();
   const isAdmin = authService.isAdmin();
   const isProfesor = user?.rol === 'PROFESOR';
@@ -18,31 +22,32 @@ const IncidenciaList = () => {
   }, []);
 
   const cargarIncidencias = async (filtros = {}) => {
-  try {
-    setLoading(true);
-    
-    const params = new URLSearchParams();
-    
-    if (filtros.alumno?.trim()) params.append('alumno', filtros.alumno.trim());
-    if (filtros.fecha) params.append('fecha', filtros.fecha);
-    if (filtros.tipo) params.append('tipo', filtros.tipo);
-    if (filtros.estado) params.append('estado', filtros.estado);
-    if (filtros.sensacion) params.append('sensacion', filtros.sensacion);
-    if (filtros.solucion) params.append('solucion', filtros.solucion);
-    if (filtros.profesor) params.append('profesor', filtros.profesor);
-    
-    const queryString = params.toString();
-    const url = `/incidencias/filtrar${queryString ? '?' + queryString : ''}`;
-    
-    const response = await api.get(url);
-    setIncidencias(response.data);
-    setError('');
-  } catch (err) {
-    setError('Error al cargar las incidencias');
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      
+      const params = new URLSearchParams();
+      
+      if (filtros.alumno?.trim()) params.append('alumno', filtros.alumno.trim());
+      if (filtros.fecha) params.append('fecha', filtros.fecha);
+      if (filtros.hora) params.append('hora', filtros.hora);  // NUEVO: filtro por hora
+      if (filtros.tipo) params.append('tipo', filtros.tipo);
+      if (filtros.estado) params.append('estado', filtros.estado);
+      if (filtros.sensacion) params.append('sensacion', filtros.sensacion);
+      if (filtros.solucion) params.append('solucion', filtros.solucion);
+      if (filtros.profesor) params.append('profesor', filtros.profesor);
+      
+      const queryString = params.toString();
+      const url = `/incidencias/filtrar${queryString ? '?' + queryString : ''}`;
+      
+      const response = await api.get(url);
+      setIncidencias(response.data);
+      setError('');
+    } catch (err) {
+      setError('Error al cargar las incidencias');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (id, alumno) => {
     if (window.confirm(`¿Está seguro de eliminar la incidencia de ${alumno}?`)) {
@@ -71,6 +76,10 @@ const IncidenciaList = () => {
     });
   };
 
+  const handleVerDetalle = (id) => {  // NUEVO: función para navegar al detalle
+    navigate(`/incidencias/${id}`);
+  };
+
   if (loading && incidencias.length === 0) {
     return (
       <div className="container mt-5 text-center">
@@ -89,13 +98,25 @@ const IncidenciaList = () => {
           <i className="bi bi-journal-text me-2"></i>
           Gestión de Incidencias
         </h2>
-        <Link to="/incidencias/nueva" className="btn btn-primary">
-          <i className="bi bi-plus-circle me-2"></i>
-          Nueva Incidencia
-        </Link>
+        <div>  {/* NUEVO: contenedor para botones */}
+          <button 
+            className="btn btn-outline-primary me-2"
+            onClick={() => setMostrarFiltros(!mostrarFiltros)}
+          >
+            <i className={`bi bi-chevron-${mostrarFiltros ? 'up' : 'down'} me-1`}></i>
+            {mostrarFiltros ? 'Ocultar' : 'Mostrar'} Filtros
+          </button>
+          <Link to="/incidencias/nueva" className="btn btn-primary">
+            <i className="bi bi-plus-circle me-2"></i>
+            Nueva Incidencia
+          </Link>
+        </div>
       </div>
 
-      <IncidenciaFiltros onFiltrar={cargarIncidencias} />
+      {/* NUEVO: filtros condicionales */}
+      {mostrarFiltros && (
+        <IncidenciaFiltros onFiltrar={cargarIncidencias} />
+      )}
 
       {error && (
         <div className="alert alert-danger" role="alert">
@@ -114,24 +135,28 @@ const IncidenciaList = () => {
           <table className="table table-hover">
             <thead>
               <tr>
-                <th>Alumno</th>
+                <th>Alumno/a</th>
                 <th>Descripción</th>
                 <th>Fecha/Hora</th>
                 <th>Tipo</th>
                 <th>Estado</th>
                 <th>Solución</th>
                 <th>Sensación</th>
-                <th>Profesor</th>
+                <th>Profesor/a</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {incidencias.map((inc) => (
                 <tr key={inc.id}>
-                  <td><strong>{inc.alumnoNombre}</strong></td>
-                  <td>{inc.descripcion.length > 50 
-                    ? inc.descripcion.substring(0, 50) + '...' 
-                    : inc.descripcion}</td>
+                  <td>
+                    <strong>{inc.alumnoNombre}</strong>
+                  </td>
+                  <td>
+                    {inc.descripcion.length > 50 
+                      ? inc.descripcion.substring(0, 50) + '...' 
+                      : inc.descripcion}
+                  </td>
                   <td>{formatFecha(inc.fechaHoraIncidente)}</td>
                   <td>
                     <span className={`badge ${getTipoBadge(inc.tipoIncidencia)}`}>
@@ -140,33 +165,45 @@ const IncidenciaList = () => {
                   </td>
                   <td>
                     <span className={`badge ${getEstadoBadge(inc.estado)}`}>
-                      {inc.estado}
+                      {inc.estado.replace('_', ' ')}
                     </span>
                   </td>
                   <td>{inc.solucion?.nombre || <span className="text-muted">-</span>}</td>
                   <td>{inc.sensacion?.nombre || <span className="text-muted">-</span>}</td>
                   <td>{inc.profesor?.nombre || 'N/A'}</td>
                   <td>
-                    {puedeEditar(inc) && (
-                      <div className="btn-group" role="group">
-                        <Link 
-                          to={`/incidencias/editar/${inc.id}`} 
-                          className="btn btn-action btn-action-edit"
-                          title="Editar incidencia"
-                        >
-                          <i className="bi bi-pencil me-1"></i>
-                          Editar
-                        </Link>
-                        <button 
-                          onClick={() => handleDelete(inc.id, inc.alumnoNombre)}
-                          className="btn btn-action btn-action-delete"
-                          title="Eliminar incidencia"
-                        >
-                          <i className="bi bi-trash me-1"></i>
-                          Eliminar
-                        </button>
-                      </div>
-                    )}
+                    <div className="btn-group" role="group">
+                      {/* NUEVO: botón Ver */}
+                      <button 
+                        onClick={() => handleVerDetalle(inc.id)}
+                        className="btn btn-action btn-info me-1"
+                        title="Ver detalle de incidencia"
+                      >
+                        <i className="bi bi-eye me-1"></i>
+                        Ver
+                      </button>
+                      
+                      {puedeEditar(inc) && (
+                        <>
+                          <Link 
+                            to={`/incidencias/editar/${inc.id}`} 
+                            className="btn btn-action btn-action-edit me-1"
+                            title="Editar incidencia"
+                          >
+                            <i className="bi bi-pencil me-1"></i>
+                            Editar
+                          </Link>
+                          <button 
+                            onClick={() => handleDelete(inc.id, inc.alumnoNombre)}
+                            className="btn btn-action btn-action-delete"
+                            title="Eliminar incidencia"
+                          >
+                            <i className="bi bi-trash me-1"></i>
+                            Eliminar
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
