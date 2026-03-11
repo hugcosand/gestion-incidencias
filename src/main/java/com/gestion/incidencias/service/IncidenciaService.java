@@ -35,7 +35,8 @@ public class IncidenciaService {
     }
 
     public List<Incidencia> filtrar(String alumno, String fecha, String tipo,
-                                    String estado, String sensacion, String solucion) {
+                                    String estado, String sensacion, String solucion,
+                                    String profesor) {  // ✅ NUEVO
 
         List<Incidencia> resultados = obtenerTodas();
 
@@ -84,6 +85,15 @@ public class IncidenciaService {
                     .filter(i -> i.getSolucion() != null &&
                             i.getSolucion().getNombre().toLowerCase()
                                     .contains(solucion.toLowerCase().trim()))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por profesor (nombre)
+        if (profesor != null && !profesor.trim().isEmpty()) {
+            resultados = resultados.stream()
+                    .filter(i -> i.getProfesor() != null &&
+                            i.getProfesor().getNombre().toLowerCase()
+                                    .contains(profesor.toLowerCase().trim()))
                     .collect(Collectors.toList());
         }
 
