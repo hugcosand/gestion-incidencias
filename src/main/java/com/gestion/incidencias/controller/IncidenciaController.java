@@ -130,6 +130,9 @@ public class IncidenciaController {
         }
 
         try {
+            // 🔴 GUARDAR COPIA DE LA INCIDENCIA ANTIGUA ANTES DE MODIFICARLA
+            Incidencia incidenciaAntigua = copiarIncidencia(incidenciaExistente);
+
             // Actualizar campos desde DTO
             incidenciaExistente.setAlumnoNombre(incidenciaDTO.getAlumnoNombre());
             incidenciaExistente.setDescripcion(incidenciaDTO.getDescripcion());
@@ -153,11 +156,18 @@ public class IncidenciaController {
                 incidenciaExistente.setSensacion(null);
             }
 
-            // No cambiamos el profesor en actualización (se mantiene el creador original)
-
+            // Guardar la incidencia actualizada
             Incidencia actualizada = incidenciaService.guardar(incidenciaExistente);
 
-            notificacionService.crearNotificacionIncidenciaActualizada(actualizada, usuario);
+            // 🔴 USAR EL NUEVO MÉTODO DE NOTIFICACIÓN CON DETALLE DE CAMBIOS
+            // Solo crear notificación si quien actualiza NO es el dueño
+            if (!actualizada.getProfesor().getId().equals(usuario.getId())) {
+                notificacionService.crearNotificacionIncidenciaActualizada(
+                        incidenciaAntigua,    // Estado antes de los cambios
+                        actualizada,          // Estado después de los cambios
+                        usuario               // Quién hizo los cambios
+                );
+            }
 
             return ResponseEntity.ok(actualizada);
 
@@ -200,14 +210,29 @@ public class IncidenciaController {
     public List<Incidencia> filtrar(
             @RequestParam(required = false) String alumno,
             @RequestParam(required = false) String fecha,
-            @RequestParam(required = false) String hora,  // ✅ NUEVO: parámetro hora
+            @RequestParam(required = false) String hora,
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String estado,
             @RequestParam(required = false) String sensacion,
             @RequestParam(required = false) String solucion,
             @RequestParam(required = false) String profesor) {
 
-        //Llama al método del servicio con el nuevo parámetro hora
         return incidenciaService.filtrar(alumno, fecha, hora, tipo, estado, sensacion, solucion, profesor);
+    }
+
+    /**
+     * Método auxiliar para crear una copia de una incidencia
+     */
+    private Incidencia copiarIncidencia(Incidencia original) {
+        Incidencia copia = new Incidencia();
+        copia.setAlumnoNombre(original.getAlumnoNombre());
+        copia.setDescripcion(original.getDescripcion());
+        copia.setFechaHoraIncidente(original.getFechaHoraIncidente());
+        copia.setTipoIncidencia(original.getTipoIncidencia());
+        copia.setEstado(original.getEstado());
+        copia.setSolucion(original.getSolucion());
+        copia.setSensacion(original.getSensacion());
+        copia.setProfesor(original.getProfesor());
+        return copia;
     }
 }
