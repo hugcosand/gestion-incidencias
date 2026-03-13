@@ -17,4 +17,6 @@ public interface IncidenciaRepository extends JpaRepository<Incidencia, Long> {
     List<Incidencia> findByFechaCreacion(LocalDate fecha);
 
     List<Incidencia> findByEstado(Estado estado);
+
+    List<Incidencia> findAllByOrderByFechaHoraIncidenteDesc();
 }

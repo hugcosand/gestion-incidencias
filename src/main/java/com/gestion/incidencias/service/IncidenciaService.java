@@ -24,7 +24,7 @@ public class IncidenciaService {
     }
 
     public List<Incidencia> obtenerTodas() {
-        return incidenciaRepository.findAll();
+        return incidenciaRepository.findAllByOrderByFechaHoraIncidenteDesc();
     }
 
     public Incidencia guardar(Incidencia incidencia) {
@@ -45,7 +45,7 @@ public class IncidenciaService {
                                     String tipo, String estado, String sensacion,
                                     String solucion, String profesor) {
 
-        List<Incidencia> resultados = obtenerTodas();
+        List<Incidencia> resultados = incidenciaRepository.findAllByOrderByFechaHoraIncidenteDesc();
 
         // Filtrar por alumno (SIN ACENTOS)
         if (alumno != null && !alumno.trim().isEmpty()) {
