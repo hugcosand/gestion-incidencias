@@ -227,3 +227,15 @@ body {
 .spinner-border {
   color: var(--primary-color);
 }
+
+.bg-red-600 {
+  background-color: #e53935 !important;
+}
+
+.text-white {
+  color: #ffffff !important;
+}
+
+.bg-blue-900{
+  background-color: #00008B !important;
+}

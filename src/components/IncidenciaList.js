@@ -225,7 +225,7 @@ const getTipoBadge = (tipo) => {
   switch(tipo) {
     case 'LEVE': return 'badge-success';
     case 'GRAVE': return 'badge-warning';
-    case 'MUY_GRAVE': return 'badge-danger';
+    case 'MUY_GRAVE': return 'bg-red-600 text-white';
     default: return 'badge-secondary';
   }
 };
