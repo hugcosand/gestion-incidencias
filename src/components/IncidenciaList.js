@@ -92,7 +92,7 @@ const IncidenciaList = () => {
   }
 
   return (
-    <div className="container mt-4">
+    <div className="container-fluid mt-4 px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="page-title">
           <i className="bi bi-journal-text me-2"></i>
