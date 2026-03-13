@@ -7,6 +7,9 @@ const UsuarioList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [mostrarFiltros, setMostrarFiltros] = useState(
+    new URLSearchParams(window.location.search).get('filtros') === 'true'
+  );
 
   useEffect(() => {
     cargarUsuarios();
@@ -65,12 +68,23 @@ const UsuarioList = () => {
           <i className="bi bi-people me-2"></i>
           Gestión de Usuarios
         </h2>
-        <Link to="/usuarios/nuevo" className="btn btn-primary">
-          + Nuevo Usuario
-        </Link>
+        <div>
+          <button 
+            className="btn btn-outline-primary me-2"
+            onClick={() => setMostrarFiltros(!mostrarFiltros)}
+          >
+            <i className={`bi bi-chevron-${mostrarFiltros ? 'up' : 'down'} me-1`}></i>
+            {mostrarFiltros ? 'Ocultar' : 'Mostrar'} Filtros
+          </button>
+          <Link to="/usuarios/nuevo" className="btn btn-primary">
+            + Nuevo Usuario
+          </Link>
+        </div>
       </div>
 
-      <UsuarioFiltros onFiltrar={cargarUsuarios} />
+      {mostrarFiltros && (
+        <UsuarioFiltros onFiltrar={cargarUsuarios} />
+      )}
 
       {error && <div className="alert alert-danger">{error}</div>}
 
@@ -94,22 +108,30 @@ const UsuarioList = () => {
                   <td><strong>{user.nombre}</strong></td>
                   <td>{user.email}</td>
                   <td>
-                    <span className={`badge ${user.rol === 'ADMIN' ? 'badge-danger' : 'badge-info'}`}>
+                    <span className={`badge ${
+                      user.rol === 'ADMIN' 
+                        ? 'bg-danger-subtle text-danger-emphasis' 
+                        : 'bg-info-subtle text-info-emphasis'
+                    }`}>
                       {user.rol === 'ADMIN' ? 'ADMIN' : 'PROFESOR'}
                     </span>
                   </td>
                   <td>
                     {user.activo ? (
-                      <span className="badge badge-success">Activo</span>
+                      <span className="badge bg-success-subtle text-success-emphasis">
+                        Activo
+                      </span>
                     ) : (
-                      <span className="badge badge-secondary">Inactivo</span>
+                      <span className="badge bg-secondary-subtle text-secondary-emphasis">
+                        Inactivo
+                      </span>
                     )}
                   </td>
                   <td>
                     <div className="btn-group" role="group">
                       <Link 
                         to={`/usuarios/editar/${user.id}`} 
-                        className="btn btn-action btn-action-edit"
+                        className="btn btn-sm bg-warning-subtle text-warning-emphasis border-0"
                       >
                         <i className="bi bi-pencil me-1"></i>
                         Editar
@@ -118,7 +140,7 @@ const UsuarioList = () => {
                       {user.activo ? (
                         <button 
                           onClick={() => handleDesactivar(user.id, user.nombre)}
-                          className="btn btn-action btn-action-desactivar"
+                          className="btn btn-sm bg-secondary-subtle text-secondary-emphasis border-0"
                         >
                           <i className="bi bi-pause-circle me-1"></i>
                           Desactivar
@@ -126,7 +148,7 @@ const UsuarioList = () => {
                       ) : (
                         <button 
                           onClick={() => handleActivar(user.id, user.nombre)}
-                          className="btn btn-action btn-success"
+                          className="btn btn-sm bg-success-subtle text-success-emphasis border-0"
                         >
                           <i className="bi bi-play-circle me-1"></i>
                           Activar

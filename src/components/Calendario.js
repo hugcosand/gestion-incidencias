@@ -92,48 +92,7 @@ const Calendario = () => {
       <div className="row">
         <div className="col-md-8">
           <div className="card shadow-sm mb-4">
-            <div className="card-header bg-light">
-              <h5 className="mb-0">
-                <i className="bi bi-calendar2-event me-2"></i>
-                Eventos destacados
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="row">
-                <div className="col-md-6">
-                  <ul className="list-unstyled">
-                    <li className="mb-2">
-                      <span className="badge bg-danger me-2">🔴</span>
-                      <strong>15-20 junio:</strong> Evaluaciones finales
-                    </li>
-                    <li className="mb-2">
-                      <span className="badge bg-warning me-2">🟡</span>
-                      <strong>22 junio:</strong> Claustro de profesores
-                    </li>
-                    <li className="mb-2">
-                      <span className="badge bg-success me-2">🟢</span>
-                      <strong>25 junio:</strong> Entrega de notas
-                    </li>
-                  </ul>
-                </div>
-                <div className="col-md-6">
-                  <ul className="list-unstyled">
-                    <li className="mb-2">
-                      <span className="badge bg-info me-2">🔵</span>
-                      <strong>1 septiembre:</strong> Inicio de curso
-                    </li>
-                    <li className="mb-2">
-                      <span className="badge bg-secondary me-2">⚫</span>
-                      <strong>8 septiembre:</strong> Reunión de departamento
-                    </li>
-                    <li className="mb-2">
-                      <span className="badge bg-primary me-2">🟣</span>
-                      <strong>15 septiembre:</strong> Excursión fin de curso
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            
           </div>
         </div>
 
@@ -170,29 +129,6 @@ const Calendario = () => {
                   Ver a pantalla completa
                 </button>
               </div>
-            </div>
-          </div>
-
-          <div className="card shadow-sm">
-            <div className="card-header bg-light">
-              <h5 className="mb-0">
-                <i className="bi bi-question-circle me-2"></i>
-                Ayuda
-              </h5>
-            </div>
-            <div className="card-body">
-              <p className="small mb-1">
-                <i className="bi bi-hand-index-thumb me-1"></i>
-                Haz clic en la imagen para ampliar
-              </p>
-              <p className="small mb-1">
-                <i className="bi bi-download me-1"></i>
-                Descarga para guardar en tu ordenador
-              </p>
-              <p className="small mb-0">
-                <i className="bi bi-printer me-1"></i>
-                Imprime para tener una copia física
-              </p>
             </div>
           </div>
         </div>

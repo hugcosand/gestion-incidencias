@@ -62,19 +62,27 @@ const IncidenciaDetalle = () => {
 
   const getBadgeClass = (tipo) => {
     switch(tipo) {
-      case 'LEVE': return 'badge-success';
-      case 'GRAVE': return 'badge-warning';
-      case 'MUY_GRAVE': return 'badge-danger';
-      default: return 'badge-secondary';
+      case 'LEVE': 
+        return 'bg-success-subtle text-success-emphasis';
+      case 'GRAVE': 
+        return 'bg-warning-subtle text-warning-emphasis';
+      case 'MUY_GRAVE': 
+        return 'bg-danger-subtle text-danger-emphasis';
+      default: 
+        return 'bg-secondary-subtle text-secondary-emphasis';
     }
   };
 
   const getEstadoBadge = (estado) => {
     switch(estado) {
-      case 'PENDIENTE': return 'badge-warning';
-      case 'EN_REVISION': return 'badge-info';
-      case 'RESUELTA': return 'badge-success';
-      default: return 'badge-secondary';
+      case 'PENDIENTE': 
+        return 'bg-warning-subtle text-warning-emphasis';
+      case 'EN_REVISION': 
+        return 'bg-info-subtle text-info-emphasis';
+      case 'RESUELTA': 
+        return 'bg-success-subtle text-success-emphasis';
+      default: 
+        return 'bg-secondary-subtle text-secondary-emphasis';
     }
   };
 
@@ -111,10 +119,10 @@ const IncidenciaDetalle = () => {
           </Link>
           {puedeEditar() && (
             <>
-              <Link to={`/incidencias/editar/${id}`} className="btn btn-warning me-2">
+              <Link to={`/incidencias/editar/${id}`} className="btn bg-warning-subtle text-warning-emphasis border-0 me-2">
                 <i className="bi bi-pencil"></i> Editar
               </Link>
-              <button onClick={handleDelete} className="btn btn-danger">
+              <button onClick={handleDelete} className="btn bg-danger-subtle text-danger-emphasis border-0">
                 <i className="bi bi-trash"></i> Eliminar
               </button>
             </>
@@ -125,8 +133,8 @@ const IncidenciaDetalle = () => {
       <div className="row">
         <div className="col-md-8">
           {/* Tarjeta principal */}
-          <div className="card mb-4">
-            <div className="card-header bg-primary text-white">
+          <div className="card mb-4 shadow-sm">
+            <div className="card-header bg-primary-subtle text-primary-emphasis">
               <h5 className="mb-0">Información de la Incidencia</h5>
             </div>
             <div className="card-body">
@@ -155,13 +163,13 @@ const IncidenciaDetalle = () => {
               <div className="row mb-3">
                 <div className="col-md-4">
                   <h6 className="fw-bold">Tipo:</h6>
-                  <span className={`badge ${getBadgeClass(incidencia.tipoIncidencia)}`}>
+                  <span className={`badge ${getBadgeClass(incidencia.tipoIncidencia)} px-3 py-2`}>
                     {incidencia.tipoIncidencia}
                   </span>
                 </div>
                 <div className="col-md-4">
                   <h6 className="fw-bold">Estado:</h6>
-                  <span className={`badge ${getEstadoBadge(incidencia.estado)}`}>
+                  <span className={`badge ${getEstadoBadge(incidencia.estado)} px-3 py-2`}>
                     {incidencia.estado.replace('_', ' ')}
                   </span>
                 </div>
@@ -179,8 +187,8 @@ const IncidenciaDetalle = () => {
 
         <div className="col-md-4">
           {/* Solución y Sensación */}
-          <div className="card mb-4">
-            <div className="card-header bg-success text-white">
+          <div className="card mb-4 shadow-sm">
+            <div className="card-header bg-success-subtle text-success-emphasis">
               <h5 className="mb-0">Solución Aplicada</h5>
             </div>
             <div className="card-body">
@@ -197,8 +205,8 @@ const IncidenciaDetalle = () => {
             </div>
           </div>
 
-          <div className="card mb-4">
-            <div className="card-header bg-info text-white">
+          <div className="card mb-4 shadow-sm">
+            <div className="card-header bg-info-subtle text-info-emphasis">
               <h5 className="mb-0">Sensación del Alumno</h5>
             </div>
             <div className="card-body">

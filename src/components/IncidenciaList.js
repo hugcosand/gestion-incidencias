@@ -125,97 +125,119 @@ const IncidenciaList = () => {
         </div>
       )}
 
+      
       {incidencias.length === 0 ? (
-        <div className="alert alert-info">
-          <i className="bi bi-info-circle me-2"></i>
-          No hay incidencias que coincidan con los filtros
-        </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-hover">
-            <thead>
-              <tr>
-                <th>Alumno/a</th>
-                <th>Descripción</th>
-                <th>Fecha/Hora</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th>Solución</th>
-                <th>Sensación</th>
-                <th>Profesor/a</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {incidencias.map((inc) => (
-                <tr key={inc.id}>
-                  <td>
-                    <strong>{inc.alumnoNombre}</strong>
-                  </td>
-                  <td>
-                    {inc.descripcion.length > 50 
-                      ? inc.descripcion.substring(0, 50) + '...' 
-                      : inc.descripcion}
-                  </td>
-                  <td>{formatFecha(inc.fechaHoraIncidente)}</td>
-                  <td>
-                    <span className={`badge ${getTipoBadge(inc.tipoIncidencia)}`}>
-                      {inc.tipoIncidencia}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${getEstadoBadge(inc.estado)}`}>
-                      {inc.estado.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td>{inc.solucion?.nombre || <span className="text-muted">-</span>}</td>
-                  <td>{inc.sensacion?.nombre || <span className="text-muted">-</span>}</td>
-                  <td>{inc.profesor?.nombre || 'N/A'}</td>
-                  <td>
-                    <div className="btn-group" role="group">
-                      {/* NUEVO: botón Ver */}
-                      <button 
-                        onClick={() => handleVerDetalle(inc.id)}
-                        className="btn btn-action btn-info me-1"
-                        title="Ver detalle de incidencia"
-                      >
-                        <i className="bi bi-eye me-1"></i>
-                        Ver
-                      </button>
-                      
-                      {puedeEditar(inc) && (
-                        <>
-                          <Link 
-                            to={`/incidencias/editar/${inc.id}`} 
-                            className="btn btn-action btn-action-edit me-1"
-                            title="Editar incidencia"
-                          >
-                            <i className="bi bi-pencil me-1"></i>
-                            Editar
-                          </Link>
-                          <button 
-                            onClick={() => handleDelete(inc.id, inc.alumnoNombre)}
-                            className="btn btn-action btn-action-delete"
-                            title="Eliminar incidencia"
-                          >
-                            <i className="bi bi-trash me-1"></i>
-                            Eliminar
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          
-          <div className="mt-3 text-muted small">
-            <i className="bi bi-info-circle me-1"></i>
-            Total: {incidencias.length} incidencias
-          </div>
-        </div>
-      )}
+  <div className="alert alert-info">
+    <i className="bi bi-info-circle me-2"></i>
+    No hay incidencias que coincidan con los filtros
+  </div>
+) : (
+  <div className="table-responsive" style={{ 
+    overflowX: 'auto',
+    borderRadius: '8px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  }}>
+    <table className="table table-hover align-middle mb-0" style={{ minWidth: '1300px' }}>
+      <thead className="table-light">
+        <tr>
+          <th style={{ width: '12%' }}>Alumno/a</th>
+          <th style={{ width: '20%' }}>Descripción</th>
+          <th style={{ width: '12%' }}>Fecha/Hora</th>
+          <th style={{ width: '8%' }}>Tipo</th>
+          <th style={{ width: '10%' }}>Estado</th>
+          <th style={{ width: '10%' }}>Solución</th>
+          <th style={{ width: '10%' }}>Sensación</th>
+          <th style={{ width: '10%' }}>Profesor/a</th>
+          <th style={{ width: '18%' }}>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {incidencias.map((inc) => (
+          <tr key={inc.id}>
+            <td className="fw-bold">{inc.alumnoNombre}</td>
+            <td>
+              <span title={inc.descripcion}>
+                {inc.descripcion.length > 60 
+                  ? inc.descripcion.substring(0, 60) + '...' 
+                  : inc.descripcion}
+              </span>
+            </td>
+            <td>{formatFecha(inc.fechaHoraIncidente)}</td>
+            <td>
+              <span className={`badge ${getTipoBadge(inc.tipoIncidencia)} px-3 py-2`}>
+                {inc.tipoIncidencia}
+              </span>
+            </td>
+            <td>
+              <span className={`badge ${getEstadoBadge(inc.estado)} px-3 py-2`}>
+                {inc.estado.replace('_', ' ')}
+              </span>
+            </td>
+            <td>{inc.solucion?.nombre || <span className="text-muted">—</span>}</td>
+            <td>{inc.sensacion?.nombre || <span className="text-muted">—</span>}</td>
+            <td>{inc.profesor?.nombre || 'N/A'}</td>
+            <td>
+  <div className="d-flex gap-1">
+    <button 
+      onClick={() => handleVerDetalle(inc.id)}
+      className="btn btn-sm bg-info-subtle text-info-emphasis border-0"
+      title="Ver detalle"
+      style={{ transition: 'all 0.2s' }}
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#9eeaf9'}
+      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+    >
+      <i className="bi bi-eye me-1"></i>
+      Ver
+    </button>
+    
+    {puedeEditar(inc) && (
+      <>
+        <Link 
+          to={`/incidencias/editar/${inc.id}`} 
+          className="btn btn-sm bg-warning-subtle text-warning-emphasis border-0"
+          title="Editar"
+          style={{ transition: 'all 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#ffe69c'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+        >
+          <i className="bi bi-pencil me-1"></i>
+          Editar
+        </Link>
+        
+        <button 
+          onClick={() => handleDelete(inc.id, inc.alumnoNombre)}
+          className="btn btn-sm bg-danger-subtle text-danger-emphasis border-0"
+          title="Eliminar"
+          style={{ transition: 'all 0.2s' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1aeb5'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+        >
+          <i className="bi bi-trash me-1"></i>
+          Eliminar
+        </button>
+      </>
+    )}
+  </div>
+</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+
+{incidencias.length > 0 && (
+  <div className="mt-3 text-muted small d-flex justify-content-between align-items-center">
+    <span>
+      <i className="bi bi-info-circle me-1"></i>
+      Total: <strong>{incidencias.length}</strong> incidencias
+    </span>
+    <span className="text-secondary">
+      <i className="bi bi-arrow-left-right me-1"></i>
+      Usa scroll horizontal para ver más columnas
+    </span>
+  </div>
+)}
     </div>
   );
 };
@@ -223,19 +245,27 @@ const IncidenciaList = () => {
 // Funciones auxiliares para badges
 const getTipoBadge = (tipo) => {
   switch(tipo) {
-    case 'LEVE': return 'badge-success';
-    case 'GRAVE': return 'badge-warning';
-    case 'MUY_GRAVE': return 'bg-red-600 text-white';
-    default: return 'badge-secondary';
+    case 'LEVE': 
+      return 'bg-success-subtle text-success-emphasis';
+    case 'GRAVE': 
+      return 'bg-warning-subtle text-warning-emphasis';
+    case 'MUY_GRAVE': 
+      return 'bg-danger-subtle text-danger-emphasis';
+    default: 
+      return 'bg-secondary-subtle text-secondary-emphasis';
   }
 };
 
 const getEstadoBadge = (estado) => {
   switch(estado) {
-    case 'PENDIENTE': return 'badge-secondary';
-    case 'EN_REVISION': return 'badge-info';
-    case 'RESUELTA': return 'badge-success';
-    default: return 'badge-secondary';
+    case 'PENDIENTE': 
+      return 'bg-warning-subtle text-warning-emphasis';
+    case 'EN_REVISION': 
+      return 'bg-info-subtle text-info-emphasis';
+    case 'RESUELTA': 
+      return 'bg-success-subtle text-success-emphasis';
+    default: 
+      return 'bg-secondary-subtle text-secondary-emphasis';
   }
 };
 
