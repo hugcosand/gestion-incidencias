@@ -105,6 +105,12 @@ const Navbar = () => {
                     {isMobile ? 'Sensaciones' : 'Sensaciones'}
                   </Link>
                 </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/estadisticas">
+                    <i className="bi bi-bar-chart-line me-1"></i>
+                    {isMobile ? 'Stats' : 'Estadísticas'}
+                  </Link>
+                </li>
               </>
             )}
           </ul>

@@ -16,6 +16,7 @@ import SolucionForm from './components/SolucionForm';
 import SensacionList from './components/SensacionList';
 import SensacionForm from './components/SensacionForm';
 import IncidenciaDetalle from './components/IncidenciaDetalle';
+import Estadisticas from './components/Estadisticas';
 import './App.css';
 
 // Componente para proteger rutas (solo autenticados)
@@ -86,6 +87,15 @@ function App() {
                 <Calendario />
               </>
             </PrivateRoute>
+          } />
+
+          <Route path="/estadisticas" element={
+            <AdminRoute>
+              <>
+                <Navbar />
+                <Estadisticas />
+              </>
+            </AdminRoute>
           } />
           
           {/* Gestión de usuarios (solo ADMIN) */}
