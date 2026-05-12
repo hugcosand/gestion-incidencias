@@ -1,6 +1,7 @@
 package com.gestion.incidencias.service;
 
 import com.gestion.incidencias.entity.Incidencia;
+import com.gestion.incidencias.entity.Usuario;
 import com.gestion.incidencias.repository.IncidenciaRepository;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 public class IncidenciaService {
@@ -159,5 +161,25 @@ public class IncidenciaService {
 
         // Convertir a minúsculas y trim
         return sinAcentos.toLowerCase().trim();
+    }
+
+    public List<Incidencia> obtenerPorProfesor(Usuario profesor) {
+        return incidenciaRepository.findAll().stream()
+                .filter(i -> i.getProfesor() != null &&
+                        i.getProfesor().getId().equals(profesor.getId()))
+                .sorted(Comparator.comparing(
+                        Incidencia::getFechaHoraIncidente,
+                        Comparator.nullsLast(Comparator.reverseOrder())
+                ))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    public Incidencia cerrar(Long id) {
+        Incidencia incidencia = obtenerPorId(id);
+        if (incidencia != null) {
+            incidencia.setEstado(com.gestion.incidencias.entity.Estado.RESUELTA);
+            return incidenciaRepository.save(incidencia);
+        }
+        return null;
     }
 }

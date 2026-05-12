@@ -221,7 +221,7 @@ public class IncidenciaController {
     }
 
     /**
-     * Método auxiliar para crear una copia de una incidencia
+     * Metodo auxiliar para crear una copia de una incidencia
      */
     private Incidencia copiarIncidencia(Incidencia original) {
         Incidencia copia = new Incidencia();
@@ -234,5 +234,49 @@ public class IncidenciaController {
         copia.setSensacion(original.getSensacion());
         copia.setProfesor(original.getProfesor());
         return copia;
+    }
+
+    @GetMapping("/mis-incidencias")
+    @Operation(summary = "Listar incidencias del profesor autenticado",
+            description = "Devuelve solo las incidencias creadas por el profesor que hace la petición")
+    public ResponseEntity<?> misIncidencias() {
+        Usuario usuario = usuarioUtil.getUsuarioFromRequest();
+
+        if (usuario.getRol() != Rol.PROFESOR && usuario.getRol() != Rol.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Acceso denegado");
+        }
+
+        List<Incidencia> resultado = incidenciaService.obtenerPorProfesor(usuario);
+        return ResponseEntity.ok(resultado);
+    }
+
+    @PatchMapping("/{id}/cerrar")
+    @Operation(summary = "Cerrar una incidencia",
+            description = "Cambia el estado de la incidencia a RESUELTA. " +
+                    "El profesor solo puede cerrar las suyas; el ADMIN puede cerrar cualquiera.")
+    public ResponseEntity<?> cerrar(@PathVariable Long id) {
+        Usuario usuario = usuarioUtil.getUsuarioFromRequest();
+
+        Incidencia incidencia = incidenciaService.obtenerPorId(id);
+        if (incidencia == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // PROFESOR solo puede cerrar las suyas
+        if (usuario.getRol() == Rol.PROFESOR &&
+                !incidencia.getProfesor().getId().equals(usuario.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Solo puedes cerrar tus propias incidencias");
+        }
+
+        // ADMIN puede cerrar cualquiera
+        if (usuario.getRol() != Rol.ADMIN && usuario.getRol() != Rol.PROFESOR) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("No tienes permisos para cerrar incidencias");
+        }
+
+        Incidencia cerrada = incidenciaService.cerrar(id);
+        return ResponseEntity.ok(cerrada);
     }
 }
