@@ -217,7 +217,7 @@ const Estadisticas = () => {
         <div className="col-md-6">
           <div className="card shadow-sm border-0 h-100">
             <div className="card-header bg-white border-bottom fw-semibold">
-              <i className="bi bi-trophy me-2 text-warning"></i>
+              <i className="bi bi-people me-2 text-warning"></i>
               Alumnos con más incidencias
             </div>
             <div className="card-body p-0">

@@ -17,6 +17,7 @@ import SensacionList from './components/SensacionList';
 import SensacionForm from './components/SensacionForm';
 import IncidenciaDetalle from './components/IncidenciaDetalle';
 import Estadisticas from './components/Estadisticas';
+import MisIncidencias from './components/MisIncidencias';
 import './App.css';
 
 // Componente para proteger rutas (solo autenticados)
@@ -53,6 +54,15 @@ function App() {
               <>
                 <Navbar />
                 <IncidenciaList />
+              </>
+            </PrivateRoute>
+          } />
+
+          <Route path="/mis-incidencias" element={
+            <PrivateRoute>
+              <>
+                <Navbar />
+                <MisIncidencias />
               </>
             </PrivateRoute>
           } />

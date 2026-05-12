@@ -12,14 +12,28 @@ const Registro = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
 
+  // ── Validación de contraseña ──────────────────────────────
+  const validarPassword = (pwd) => {
+    return {
+      longitud:  pwd.length >= 8,
+      mayuscula: /[A-Z]/.test(pwd),
+      numero:    /\d/.test(pwd),
+    };
+  };
+
+  const passwordOk = (pwd) => {
+    const v = validarPassword(pwd);
+    return v.longitud && v.mayuscula && v.numero;
+  };
+
+  const checks = validarPassword(formData.password);
+  const mostrarIndicador = formData.password.length > 0;
+
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -27,31 +41,27 @@ const Registro = () => {
     setError('');
     setSuccess('');
 
-    // Validaciones básicas
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
     }
 
-    if (formData.password.length < 4) {
-      setError('La contraseña debe tener al menos 4 caracteres');
+    if (!passwordOk(formData.password)) {
+      setError('La contraseña no cumple los requisitos de seguridad');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await api.post('/usuarios/registro', {
-        nombre: formData.nombre,
-        email: formData.email,
+      await api.post('/usuarios/registro', {
+        nombre:   formData.nombre,
+        email:    formData.email,
         password: formData.password
       });
 
-      setSuccess('¡Registro exitoso! Ahora puedes iniciar sesión.');
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
-
+      setSuccess('¡Registro exitoso! Redirigiendo al login...');
+      setTimeout(() => navigate('/'), 2500);
     } catch (err) {
       setError(err.response?.data || 'Error al registrar usuario');
     } finally {
@@ -59,24 +69,32 @@ const Registro = () => {
     }
   };
 
+  // ── Indicador visual de requisitos ───────────────────────
+  const Requisito = ({ ok, texto }) => (
+    <li className={`d-flex align-items-center gap-2 small ${ok ? 'text-success' : 'text-muted'}`}>
+      <i className={`bi ${ok ? 'bi-check-circle-fill' : 'bi-circle'}`}></i>
+      {texto}
+    </li>
+  );
+
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-6 col-lg-4">
           <div className="card shadow">
             <div className="card-body">
-              <h2 className="text-center mb-4">Gestión de Incidencias</h2>
+              <h2 className="text-center mb-2">Gestión de Incidencias</h2>
               <h5 className="text-center text-muted mb-4">Registro de Nuevo Usuario</h5>
-              
+
               {error && (
                 <div className="alert alert-danger" role="alert">
-                  {error}
+                  <i className="bi bi-exclamation-triangle me-2"></i>{error}
                 </div>
               )}
-              
+
               {success && (
                 <div className="alert alert-success" role="alert">
-                  {success}
+                  <i className="bi bi-check-circle me-2"></i>{success}
                 </div>
               )}
 
@@ -109,25 +127,42 @@ const Registro = () => {
                   />
                 </div>
 
-                <div className="mb-3">
+                <div className="mb-1">
                   <label htmlFor="password" className="form-label">Contraseña</label>
                   <input
                     type="password"
-                    className="form-control"
+                    className={`form-control ${
+                      mostrarIndicador
+                        ? passwordOk(formData.password) ? 'is-valid' : 'is-invalid'
+                        : ''
+                    }`}
                     id="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    placeholder="Mínimo 4 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                   />
                 </div>
+
+                {/* Indicador de requisitos */}
+                {mostrarIndicador && (
+                  <ul className="list-unstyled mb-3 mt-2 ps-1">
+                    <Requisito ok={checks.longitud}  texto="Mínimo 8 caracteres" />
+                    <Requisito ok={checks.mayuscula} texto="Al menos una mayúscula" />
+                    <Requisito ok={checks.numero}    texto="Al menos un número" />
+                  </ul>
+                )}
 
                 <div className="mb-3">
                   <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
                   <input
                     type="password"
-                    className="form-control"
+                    className={`form-control ${
+                      formData.confirmPassword.length > 0
+                        ? formData.password === formData.confirmPassword ? 'is-valid' : 'is-invalid'
+                        : ''
+                    }`}
                     id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
@@ -135,10 +170,13 @@ const Registro = () => {
                     required
                     placeholder="Repite la contraseña"
                   />
+                  {formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && (
+                    <div className="invalid-feedback">Las contraseñas no coinciden</div>
+                  )}
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn btn-primary w-100"
                   disabled={loading}
                 >

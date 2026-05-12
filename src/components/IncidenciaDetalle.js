@@ -9,6 +9,8 @@ const IncidenciaDetalle = () => {
   const [incidencia, setIncidencia] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [cerrando, setCerrando] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState('');
   const user = authService.getCurrentUser();
   const isAdmin = authService.isAdmin();
 
@@ -23,7 +25,6 @@ const IncidenciaDetalle = () => {
       setIncidencia(response.data);
       setError('');
     } catch (err) {
-      console.error('Error cargando incidencia:', err);
       setError('No se pudo cargar la incidencia');
     } finally {
       setLoading(false);
@@ -31,95 +32,115 @@ const IncidenciaDetalle = () => {
   };
 
   const puedeEditar = () => {
+    if (!incidencia) return false;
     if (isAdmin) return true;
     if (incidencia.profesor?.id === user?.id) return true;
     return false;
   };
 
+  const puedeCerrar = () => {
+    if (!incidencia) return false;
+    if (incidencia.estado === 'RESUELTA') return false; // ya cerrada
+    return puedeEditar();
+  };
+
+  const handleCerrar = async () => {
+    if (!window.confirm('¿Marcar esta incidencia como RESUELTA?')) return;
+    try {
+      setCerrando(true);
+      await api.patch(`/incidencias/${id}/cerrar`);
+      setMensajeExito('Incidencia cerrada correctamente.');
+      cargarIncidencia(); // recargar para actualizar el estado
+    } catch (err) {
+      alert('Error al cerrar la incidencia.');
+    } finally {
+      setCerrando(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!window.confirm('¿Estás seguro de eliminar esta incidencia?')) return;
-    
     try {
       await api.delete(`/incidencias/${id}`);
       navigate('/incidencias');
     } catch (err) {
-      console.error('Error eliminando:', err);
       alert('Error al eliminar la incidencia');
     }
   };
 
   const formatFecha = (fecha) => {
     if (!fecha) return '';
-    const date = new Date(fecha);
-    return date.toLocaleString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(fecha).toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
     });
   };
 
   const getBadgeClass = (tipo) => {
-    switch(tipo) {
-      case 'LEVE': 
-        return 'bg-success-subtle text-success-emphasis';
-      case 'GRAVE': 
-        return 'bg-warning-subtle text-warning-emphasis';
-      case 'MUY_GRAVE': 
-        return 'bg-danger-subtle text-danger-emphasis';
-      default: 
-        return 'bg-secondary-subtle text-secondary-emphasis';
+    switch (tipo) {
+      case 'LEVE':      return 'bg-success-subtle text-success-emphasis';
+      case 'GRAVE':     return 'bg-warning-subtle text-warning-emphasis';
+      case 'MUY_GRAVE': return 'bg-danger-subtle text-danger-emphasis';
+      default:          return 'bg-secondary-subtle text-secondary-emphasis';
     }
   };
 
   const getEstadoBadge = (estado) => {
-    switch(estado) {
-      case 'PENDIENTE': 
-        return 'bg-warning-subtle text-warning-emphasis';
-      case 'EN_REVISION': 
-        return 'bg-info-subtle text-info-emphasis';
-      case 'RESUELTA': 
-        return 'bg-success-subtle text-success-emphasis';
-      default: 
-        return 'bg-secondary-subtle text-secondary-emphasis';
+    switch (estado) {
+      case 'PENDIENTE':   return 'bg-warning-subtle text-warning-emphasis';
+      case 'EN_REVISION': return 'bg-info-subtle text-info-emphasis';
+      case 'RESUELTA':    return 'bg-success-subtle text-success-emphasis';
+      default:            return 'bg-secondary-subtle text-secondary-emphasis';
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container mt-5 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </div>
+  if (loading) return (
+    <div className="container mt-5 text-center">
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Cargando...</span>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error || !incidencia) {
-    return (
-      <div className="container mt-5">
-        <div className="alert alert-danger">{error || 'Incidencia no encontrada'}</div>
-        <Link to="/incidencias" className="btn btn-primary">
-          <i className="bi bi-arrow-left"></i> Volver a Incidencias
-        </Link>
-      </div>
-    );
-  }
+  if (error || !incidencia) return (
+    <div className="container mt-5">
+      <div className="alert alert-danger">{error || 'Incidencia no encontrada'}</div>
+      <Link to="/incidencias" className="btn btn-primary">
+        <i className="bi bi-arrow-left"></i> Volver
+      </Link>
+    </div>
+  );
 
   return (
     <div className="container-fluid mt-4 px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="page-title">
-          <i className="bi bi-file-text me-2"></i> Detalle de Incidencia
+          <i className="bi bi-file-text me-2"></i>Detalle de Incidencia
         </h2>
-        <div>
-          <Link to="/incidencias" className="btn btn-outline-secondary me-2">
+        <div className="d-flex gap-2 flex-wrap">
+          <Link to="/incidencias" className="btn btn-outline-secondary">
             <i className="bi bi-arrow-left"></i> Volver
           </Link>
+
+          {/* ── BOTÓN CERRAR (tuyo) ── */}
+          {puedeCerrar() && (
+            <button
+              onClick={handleCerrar}
+              disabled={cerrando}
+              className="btn bg-success-subtle text-success-emphasis border-0"
+              title="Marcar como resuelta"
+            >
+              {cerrando ? (
+                <><span className="spinner-border spinner-border-sm me-1"></span>Cerrando...</>
+              ) : (
+                <><i className="bi bi-check2-circle me-1"></i>Cerrar incidencia</>
+              )}
+            </button>
+          )}
+
           {puedeEditar() && (
             <>
-              <Link to={`/incidencias/editar/${id}`} className="btn bg-warning-subtle text-warning-emphasis border-0 me-2">
+              <Link to={`/incidencias/editar/${id}`} className="btn bg-warning-subtle text-warning-emphasis border-0">
                 <i className="bi bi-pencil"></i> Editar
               </Link>
               <button onClick={handleDelete} className="btn bg-danger-subtle text-danger-emphasis border-0">
@@ -130,9 +151,24 @@ const IncidenciaDetalle = () => {
         </div>
       </div>
 
+      {/* Mensaje de éxito al cerrar */}
+      {mensajeExito && (
+        <div className="alert alert-success alert-dismissible" role="alert">
+          <i className="bi bi-check-circle me-2"></i>{mensajeExito}
+          <button type="button" className="btn-close" onClick={() => setMensajeExito('')}></button>
+        </div>
+      )}
+
+      {/* Badge de incidencia ya cerrada */}
+      {incidencia.estado === 'RESUELTA' && (
+        <div className="alert alert-success d-flex align-items-center gap-2 mb-4">
+          <i className="bi bi-check-circle-fill fs-5"></i>
+          <span>Esta incidencia está <strong>resuelta</strong>.</span>
+        </div>
+      )}
+
       <div className="row">
         <div className="col-md-8">
-          {/* Tarjeta principal */}
           <div className="card mb-4 shadow-sm">
             <div className="card-header bg-primary-subtle text-primary-emphasis">
               <h5 className="mb-0">Información de la Incidencia</h5>
@@ -170,7 +206,7 @@ const IncidenciaDetalle = () => {
                 <div className="col-md-4">
                   <h6 className="fw-bold">Estado:</h6>
                   <span className={`badge ${getEstadoBadge(incidencia.estado)} px-3 py-2`}>
-                    {incidencia.estado.replace('_', ' ')}
+                    {incidencia.estado?.replace('_', ' ')}
                   </span>
                 </div>
               </div>
@@ -186,7 +222,6 @@ const IncidenciaDetalle = () => {
         </div>
 
         <div className="col-md-4">
-          {/* Solución y Sensación */}
           <div className="card mb-4 shadow-sm">
             <div className="card-header bg-success-subtle text-success-emphasis">
               <h5 className="mb-0">Solución Aplicada</h5>

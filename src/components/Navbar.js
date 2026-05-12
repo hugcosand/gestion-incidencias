@@ -65,12 +65,17 @@ const Navbar = () => {
             {isAuthenticated && (
               <>
                 {/* Filtros - Solo visible en desktop, en móvil está en el botón */}
-                
-                
                 <li className="nav-item">
                   <Link className="nav-link" to="/incidencias/nueva">
                     <i className="bi bi-plus-circle me-1"></i>
                     {isMobile ? 'Nueva' : 'Nueva Incidencia'}
+                  </Link>
+                </li>
+
+                <li className="nav-item">
+                  <Link className="nav-link" to="/mis-incidencias">
+                    <i className="bi bi-person-lines-fill me-1"></i>
+                    {isMobile ? 'Las mías' : 'Mis Incidencias'}
                   </Link>
                 </li>
               </>
