@@ -17,6 +17,8 @@ const IncidenciaList = () => {
   const user = authService.getCurrentUser();
   const isAdmin = authService.isAdmin();
   const isProfesor = user?.rol === 'PROFESOR';
+  const [busqueda, setBusqueda] = useState('');
+  const [orden, setOrden] = useState({ columna: null, dir: 'asc' });
 
   // Detectar cambios de tamaño de pantalla
   useEffect(() => {
@@ -116,6 +118,99 @@ const IncidenciaList = () => {
     );
   }
 
+  const exportarCSV = () => {
+    if (!incidencias || incidencias.length === 0) {
+      alert('No hay incidencias para exportar');
+      return;
+    }
+ 
+    const cabeceras = [
+      'ID', 'Alumno', 'Fecha incidente', 'Tipo', 'Estado',
+      'Profesor', 'Solución', 'Sensación', 'Descripción'
+    ];
+ 
+    const filas = incidencias.map(inc => [
+      inc.id,
+      inc.alumnoNombre || '',
+      inc.fechaHoraIncidente
+        ? new Date(inc.fechaHoraIncidente).toLocaleString('es-ES')
+        : '',
+      inc.tipoIncidencia || '',
+      inc.estado || '',
+      inc.profesor?.nombre || '',
+      inc.solucion?.nombre || '',
+      inc.sensacion?.nombre || '',
+      (inc.descripcion || '').replace(/[\n\r;]/g, ' ')
+    ]);
+ 
+    const contenido = [cabeceras, ...filas]
+      .map(fila => fila.map(celda => `"${celda}"`).join(';'))
+      .join('\n');
+ 
+    const blob = new Blob(['\uFEFF' + contenido], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `incidencias_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleOrden = (columna) => {
+    setOrden(prev => ({
+      columna,
+      dir: prev.columna === columna && prev.dir === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+ 
+  const incidenciasFiltradas = (incidencias || [])
+    // Buscador rápido
+    .filter(inc => {
+      if (!busqueda.trim()) return true;
+      const q = busqueda.toLowerCase();
+      return (
+        inc.alumnoNombre?.toLowerCase().includes(q) ||
+        inc.profesor?.nombre?.toLowerCase().includes(q) ||
+        inc.estado?.toLowerCase().includes(q) ||
+        inc.tipoIncidencia?.toLowerCase().includes(q) ||
+        inc.descripcion?.toLowerCase().includes(q)
+      );
+    })
+    // Ordenación
+    .sort((a, b) => {
+      if (!orden.columna) return 0;
+
+      const ordenTipo   = { 'LEVE': 1, 'GRAVE': 2, 'MUY_GRAVE': 3 };
+      const ordenEstado = { 'PENDIENTE': 1, 'EN_REVISION': 2, 'RESUELTA': 3 };
+
+      let valA, valB;
+      switch (orden.columna) {
+        case 'alumno':
+          valA = a.alumnoNombre || ''; valB = b.alumnoNombre || '';
+          return orden.dir === 'asc' ? valA.localeCompare(valB, 'es') : valB.localeCompare(valA, 'es');
+
+        case 'fecha':
+          valA = a.fechaHoraIncidente || ''; valB = b.fechaHoraIncidente || '';
+          return orden.dir === 'asc' ? valA.localeCompare(valB, 'es') : valB.localeCompare(valA, 'es');
+
+        case 'tipo':
+          valA = ordenTipo[a.tipoIncidencia] || 0;
+          valB = ordenTipo[b.tipoIncidencia] || 0;
+          return orden.dir === 'asc' ? valA - valB : valB - valA;
+
+        case 'estado':
+          valA = ordenEstado[a.estado] || 0;
+          valB = ordenEstado[b.estado] || 0;
+          return orden.dir === 'asc' ? valA - valB : valB - valA;
+
+        case 'profesor':
+          valA = a.profesor?.nombre || ''; valB = b.profesor?.nombre || '';
+          return orden.dir === 'asc' ? valA.localeCompare(valB, 'es') : valB.localeCompare(valA, 'es');
+
+        default: return 0;
+      }
+    });
+ 
   return (
     <div className="container-fluid mt-4 px-2 px-md-4">
       {/* Cabecera */}
@@ -137,6 +232,14 @@ const IncidenciaList = () => {
             {!isMobile && 'Nueva Incidencia'}
             {isMobile && 'Nueva'}
           </Link>
+          <button
+              onClick={exportarCSV}
+              className="btn btn-outline-success me-2"
+              title="Exportar incidencias visibles a CSV"
+            >
+              <i className="bi bi-file-earmark-spreadsheet me-1"></i>
+              Exportar CSV
+          </button>
         </div>
       </div>
 
@@ -144,6 +247,31 @@ const IncidenciaList = () => {
       {mostrarFiltros && (
         <IncidenciaFiltros onFiltrar={cargarIncidencias} />
       )}
+
+      <div className="mb-3">
+        <div className="input-group">
+          <span className="input-group-text bg-white">
+            <i className="bi bi-search text-muted"></i>
+          </span>
+          <input
+            type="text"
+            className="form-control border-start-0"
+            placeholder="Buscar por alumno, profesor, estado, tipo..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+          {busqueda && (
+            <button className="btn btn-outline-secondary" onClick={() => setBusqueda('')}>
+              <i className="bi bi-x"></i>
+            </button>
+          )}
+        </div>
+        {busqueda && (
+          <small className="text-muted ms-1">
+            {incidenciasFiltradas.length} resultado{incidenciasFiltradas.length !== 1 ? 's' : ''}
+          </small>
+        )}
+      </div>
 
       {error && (
         <div className="alert alert-danger" role="alert">
@@ -260,19 +388,29 @@ const IncidenciaList = () => {
               <table className="table table-hover align-middle mb-0" style={{ minWidth: '1200px' }}>
                 <thead className="table-light">
                   <tr>
-                    <th style={{ width: '12%' }}>Alumno/a</th>
-                    <th style={{ width: '22%' }}>Descripción</th>
-                    <th style={{ width: '12%' }}>Fecha/Hora</th>
-                    <th style={{ width: '8%' }}>Tipo</th>
-                    <th style={{ width: '10%' }}>Estado</th>
-                    <th style={{ width: '10%' }}>Solución</th>
-                    <th style={{ width: '10%' }}>Sensación</th>
-                    <th style={{ width: '10%' }}>Profesor/a</th>
-                    <th style={{ width: '18%' }}>Acciones</th>
+                    <th style={{width:'12%', cursor:'pointer'}} onClick={() => handleOrden('alumno')}>
+                      Alumno/a {orden.columna==='alumno' ? (orden.dir==='asc' ? '↑' : '↓') : '↕'}
+                    </th>
+                    <th style={{width:'22%'}}>Descripción</th>
+                    <th style={{width:'12%', cursor:'pointer'}} onClick={() => handleOrden('fecha')}>
+                      Fecha/Hora {orden.columna==='fecha' ? (orden.dir==='asc' ? '↑' : '↓') : '↕'}
+                    </th>
+                    <th style={{width:'8%', cursor:'pointer'}} onClick={() => handleOrden('tipo')}>
+                      Tipo {orden.columna==='tipo' ? (orden.dir==='asc' ? '↑' : '↓') : '↕'}
+                    </th>
+                    <th style={{width:'10%', cursor:'pointer'}} onClick={() => handleOrden('estado')}>
+                      Estado {orden.columna==='estado' ? (orden.dir==='asc' ? '↑' : '↓') : '↕'}
+                    </th>
+                    <th style={{width:'10%'}}>Solución</th>
+                    <th style={{width:'10%'}}>Sensación</th>
+                    <th style={{width:'10%', cursor:'pointer'}} onClick={() => handleOrden('profesor')}>
+                      Profesor/a {orden.columna==='profesor' ? (orden.dir==='asc' ? '↑' : '↓') : '↕'}
+                    </th>
+                    <th style={{width:'18%'}}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {incidencias.map((inc) => (
+                  {incidenciasFiltradas.map((inc) => (
                     <tr key={inc.id}>
                       <td className="fw-bold">{inc.alumnoNombre}</td>
                       <td>

@@ -53,6 +53,13 @@ const Navbar = () => {
         {/* Menú colapsable */}
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+
+            <li className="nav-item">
+              <Link className="nav-link" to="/dashboard">
+                <i className="bi bi-house me-1"></i>
+                {isMobile ? 'Inicio' : 'Inicio'}
+              </Link>
+            </li>
             {/* Incidencias - Siempre visible */}
             <li className="nav-item">
               <Link className="nav-link" to="/incidencias">
@@ -106,7 +113,7 @@ const Navbar = () => {
                 </li>
                 <li className="nav-item">
                   <Link className="nav-link" to="/sensaciones">
-                    <i className="bi bi-emoji-neutral me-1"></i>
+                    <i className="bi bi-emoji-smile me-1"></i>
                     {isMobile ? 'Sensaciones' : 'Sensaciones'}
                   </Link>
                 </li>

@@ -55,7 +55,7 @@ const SensacionList = () => {
     <div className="container-fluid mt-4 px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="page-title">
-          <i className="bi bi-emoji-neutral me-2"></i>
+          <i className="bi bi-emoji-smile me-2"></i>
           Gestión de Sensaciones
         </h2>
         <Link to="/sensaciones/nueva" className="btn bg-primary-subtle text-primary-emphasis border-0 px-4 py-2">
@@ -85,7 +85,6 @@ const SensacionList = () => {
           <table className="table table-hover align-middle mb-0" style={{ minWidth: '900px' }}>
             <thead className="table-light">
               <tr>
-                <th style={{ width: '8%' }}>ID</th>
                 <th style={{ width: '20%' }}>Nombre</th>
                 <th style={{ width: '35%' }}>Descripción</th>
                 <th style={{ width: '15%' }}>Estado</th>
@@ -95,7 +94,6 @@ const SensacionList = () => {
             <tbody>
               {sensaciones.map((sen) => (
                 <tr key={sen.id} className={!sen.activo ? 'table-light' : ''}>
-                  <td><span className="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2">#{sen.id}</span></td>
                   <td><strong>{sen.nombre}</strong></td>
                   <td>{sen.descripcion || <span className="text-muted fst-italic">Sin descripción</span>}</td>
                   <td>

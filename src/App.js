@@ -18,6 +18,7 @@ import SensacionForm from './components/SensacionForm';
 import IncidenciaDetalle from './components/IncidenciaDetalle';
 import Estadisticas from './components/Estadisticas';
 import MisIncidencias from './components/MisIncidencias';
+import Dashboard from './components/Dashboard';
 import './App.css';
 
 // Componente para proteger rutas (solo autenticados)
@@ -47,6 +48,15 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/" element={<Login />} />
+
+          <Route path="/dashboard" element={
+            <PrivateRoute>
+              <>
+                <Navbar />
+                <Dashboard />
+              </>
+            </PrivateRoute>
+          } />
           
           {/* Todas las rutas de incidencias con PrivateRoute */}
           <Route path="/incidencias" element={

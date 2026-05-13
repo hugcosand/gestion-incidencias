@@ -19,7 +19,7 @@ const Login = () => {
     const result = await authService.login(email, password);
     
     if (result.success) {
-      navigate('/incidencias');
+      navigate('/dashboard');
     } else {
       setError(result.error || 'Credenciales incorrectas');
     }
